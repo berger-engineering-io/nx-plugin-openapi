@@ -2,8 +2,35 @@
   "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "GenerateApi executor",
-  "description": "",
+  "description": "Executor to generate API client code from OpenAPI specifications",
   "type": "object",
-  "properties": {},
-  "required": []
+  "properties": {
+    "specPath": {
+      "type": "string",
+      "description": "Path to the OpenAPI specification file"
+    },
+    "generatorType": {
+      "type": "string",
+      "description": "Type of client code generator to use",
+      "default": "typescript-angular"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Output directory for the generated API code"
+    },
+    "configFile": {
+      "type": "string",
+      "description": "Path to a custom configuration file",
+      "required": false
+    },
+    "skipValidateSpec": {
+      "type": "boolean",
+      "description": "Whether to skip validation of the OpenAPI specification",
+      "default": false
+    }
+  },
+  "required": [
+    "specPath",
+    "outputPath"
+  ]
 }
