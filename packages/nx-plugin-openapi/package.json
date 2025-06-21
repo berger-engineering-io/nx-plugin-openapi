@@ -5,6 +5,9 @@
     "@nx/devkit": "19.8.14",
     "tslib": "^2.3.0"
   },
+  "peerDependencies": {
+    "@openapitools/openapi-generator-cli": ">2.0.0"
+  },
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
