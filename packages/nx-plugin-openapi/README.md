@@ -28,7 +28,8 @@ In your `nx.json` it makes sense to update the `targetDefaults` to include the `
   "targetDefaults": {
     "generate-api": {
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
-      "cache": true
+      "cache": true,
+      "inputs": ["{projectRoot}/swagger.json", "{projectRoot}/openapitools.json", "{projectRoot}/api-config.json"]
     }
   },
   "build": {
@@ -50,7 +51,8 @@ Add the executor to your project's `project.json`:
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src",
         "generatorType": "typescript-angular"
-      }
+      },
+      "outputs": ["{options.outputPath}"]
     }
   }
 }
