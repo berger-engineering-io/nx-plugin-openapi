@@ -6,6 +6,16 @@
   "sourceRoot": "apps/demo/src",
   "tags": [],
   "targets": {
+    "generate-api": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "inputs": ["{workspaceRoot}/config.json"],
+      "options": {
+        "specPath": "apps/demo/swagger.json",
+        "outputPath": "apps/demo/src/app/api",
+        "skipValidateSpec": true
+      },
+      "outputs": ["{options.outputPath}"]
+    },
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
