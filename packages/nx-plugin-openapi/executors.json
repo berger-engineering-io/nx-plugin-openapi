@@ -1,0 +1,10 @@
+{
+  "executors": {
+    "generate-api": {
+      "implementation": "./src/executors/generate-api/executor",
+      "schema": "./src/executors/generate-api/schema.json",
+      "description": "Exectutor to generate API client from openapi spec",
+      "hasher": "./src/executors/generate-api/hasher"
+    }
+  }
+}
