@@ -1,4 +1,4 @@
-import { ExecutorContext, PromiseExecutor } from '@nx/devkit';
+import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { rmSync } from 'fs';
 import { join } from 'path';
@@ -8,8 +8,6 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   options,
   context: ExecutorContext
 ) => {
-  console.log('Executor ran for GenerateApi', options);
-
   const {
     generatorType = 'typescript-angular',
     skipValidateSpec = false,
@@ -17,15 +15,8 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     outputPath,
     configFile,
   } = options;
-  // TODO support all options from https://openapi-generator.tech/docs/generators/typescript-angular/
-  // also add parsion for cli arguments
 
   try {
-    // Clean the output directory before generating
-    const fullOutputPath = join(context.root, outputPath);
-    console.log(`Cleaning output directory: ${fullOutputPath}`);
-    rmSync(fullOutputPath, { recursive: true, force: true });
-
     let command = `node node_modules/@openapitools/openapi-generator-cli/main.js generate`;
     command += ` -i ${inputSpec}`;
     command += ` -g ${generatorType}`;
@@ -40,6 +31,15 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     }
 
     console.log(`Running command: ${command}`);
+    logger.info(
+      '[@lambda-solutions/nx-plugin-openapi] Starting to generate API from provided OpenAPI spec...'
+    );
+    logger.verbose(
+      `[@lambda-solutions/nx-plugin-openapi] Cleaning outputPath ${outputPath} first`
+    );
+    // Clean the output directory before generating
+    const fullOutputPath = join(context.root, outputPath);
+    rmSync(fullOutputPath, { recursive: true, force: true });
 
     execSync(command, {
       stdio: 'inherit',
@@ -72,11 +72,17 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
       }
     }
 
+    logger.info(
+      `[@lambda-solutions/nx-plugin-openapi] API generation completed successfully.`
+    );
     return {
       success: true,
     };
   } catch (error) {
-    console.error('Error generating API:', error);
+    logger.error(
+      `[@lambda-solutions/nx-plugin-openapi] API generation failed with error`
+    );
+    logger.error(error);
     return {
       success: false,
     };
