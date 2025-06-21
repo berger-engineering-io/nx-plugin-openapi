@@ -13,7 +13,7 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   const {
     generatorType = 'typescript-angular',
     skipValidateSpec = false,
-    specPath,
+    inputSpec,
     outputPath,
     configFile,
   } = options;
@@ -27,7 +27,7 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     rmSync(fullOutputPath, { recursive: true, force: true });
 
     let command = `node node_modules/@openapitools/openapi-generator-cli/main.js generate`;
-    command += ` -i ${specPath}`;
+    command += ` -i ${inputSpec}`;
     command += ` -g ${generatorType}`;
     command += ` -o ${outputPath}`;
 
@@ -47,9 +47,9 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     });
     // currently disabled
     if (false) {
-      if (specPath.startsWith('http://') || specPath.startsWith('https://')) {
-        console.log(`Spec path is a URL: ${specPath}`);
-        const response = await fetch(specPath);
+      if (inputSpec.startsWith('http://') || inputSpec.startsWith('https://')) {
+        console.log(`Spec path is a URL: ${inputSpec}`);
+        const response = await fetch(inputSpec);
         if (response.ok) {
           const content = await response.text();
           const projectName = context.projectName || 'default';
@@ -68,7 +68,7 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
           console.log(`API spec saved to: ${apiPath}`);
         }
       } else {
-        console.log(`Spec path is a local file: ${specPath}`);
+        console.log(`Spec path is a local file: ${inputSpec}`);
       }
     }
 

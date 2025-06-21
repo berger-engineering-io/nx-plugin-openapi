@@ -5,7 +5,7 @@
   "description": "Executor to generate API client code from OpenAPI specifications",
   "type": "object",
   "properties": {
-    "specPath": {
+    "inputSpec": {
       "type": "string",
       "description": "Path to the OpenAPI specification file"
     },
@@ -30,7 +30,7 @@
     }
   },
   "required": [
-    "specPath",
+    "inputSpec",
     "outputPath"
   ]
 }
