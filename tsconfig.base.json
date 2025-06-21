@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@lambda-solutions/nx-plugin-openapi": [
+        "packages/nx-plugin-openapi/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
