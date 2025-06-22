@@ -20,8 +20,7 @@
     },
     "configFile": {
       "type": "string",
-      "description": "Path to a custom configuration file",
-      "required": false
+      "description": "Path to a custom configuration file"
     },
     "skipValidateSpec": {
       "type": "boolean",
