@@ -1,6 +1,6 @@
 import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { rmSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { rmSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { GenerateApiExecutorSchema } from './schema';
 import { RemoteCashedFileInfo } from './remote-cashed-file-info';
@@ -110,7 +110,18 @@ async function handleRemote(args: {
       /**
        * We can compare the hash of the remote file with the cached one
        */
-      const needToUpdate = compareHash({ context, cashedFilInfo });
+      // First create the directory if it does not exist
+      mkdirSync(
+        join(
+          context.root,
+          getpluginMetadataDir(options.pluginMetadataDir),
+          projectName
+        ),
+        {
+          recursive: true,
+        }
+      );
+      const needToUpdate = compareHash({ context, options, cashedFilInfo });
       if (!needToUpdate.updateNeeded) {
         return Promise.resolve();
       }
@@ -118,20 +129,15 @@ async function handleRemote(args: {
       // write the content to .nx-plugin-openapi/{projectName}/api.json
       const apiPath = join(
         context.root,
-        // todo config option
-        '.nx-plugin-openapi',
+        getpluginMetadataDir(options.pluginMetadataDir),
         projectName,
         'api.json'
       );
-
-      mkdirSync(join(context.root, '.nx-plugin-openapi', projectName), {
-        recursive: true,
-      });
       writeFileSync(apiPath, content);
 
       const cashedFileInfoPath = join(
         context.root,
-        '.nx-plugin-openapi',
+        getpluginMetadataDir(options.pluginMetadataDir),
         projectName,
         'cache-info.json'
       );
@@ -168,19 +174,21 @@ function hashFileContent(fileContent: string): string {
 function compareHash(args: {
   context: ExecutorContext;
   cashedFilInfo: RemoteCashedFileInfo;
+  options: GenerateApiExecutorSchema;
 }): { updateNeeded: boolean } {
-  const { context, cashedFilInfo } = args;
+  // throws when the cache-info.json file does not exist
+  const { context, cashedFilInfo, options } = args;
   const projectName = context.projectName || 'default';
 
   // we need to read the cached file info
   const cashedFileInfoPath = join(
     context.root,
-    '.nx-plugin-openapi',
+    getpluginMetadataDir(options.pluginMetadataDir),
     projectName,
     'cache-info.json'
   );
   // check if the file exists
-  if (!readFileSync(cashedFileInfoPath, { encoding: 'utf8' })) {
+  if (!existsSync(cashedFileInfoPath)) {
     logger.verbose(
       `[@lambda-solutions/nx-plugin-openapi] No cached file info found at ${cashedFileInfoPath}.`
     );
@@ -201,4 +209,8 @@ function compareHash(args: {
     );
     return { updateNeeded: true };
   }
+}
+
+function getpluginMetadataDir(optionPath?: string) {
+  return optionPath ? `.${optionPath}` : '.nx-plugin-openapi';
 }
