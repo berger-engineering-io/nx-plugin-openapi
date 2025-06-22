@@ -1,6 +1,6 @@
 {
   "fileNaming": "kebab-case",
-  "ngVersionngVersion": "19.0.0",
+  "ngVersion": "19.0.0",
   "providedIn": "root",
   "serviceFileSuffix": ".api.service",
   "serviceSuffix": "ApiService",

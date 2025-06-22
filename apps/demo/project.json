@@ -10,7 +10,7 @@
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "inputs": ["{workspaceRoot}/config.json"],
       "options": {
-        "specPath": "apps/demo/swagger.json",
+        "inputSpec": "apps/demo/swagger.json",
         "outputPath": "apps/demo/src/app/api",
         "skipValidateSpec": true
       },
