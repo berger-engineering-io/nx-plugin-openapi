@@ -1,6 +1,6 @@
 import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { rmSync, mkdirSync, writeFileSync } from 'fs';
+import { rmSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { GenerateApiExecutorSchema } from './schema';
 import { RemoteCashedFileInfo } from './remote-cashed-file-info';
@@ -85,6 +85,7 @@ async function handleRemote(args: {
     logger.verbose(
       `[@lambda-solutions/nx-plugin-openapi] Spec path is a remote URL: ${inputSpec}`
     );
+
     logger.verbose(
       `[@lambda-solutions/nx-plugin-openapi] Fetching remote OpenAPI spec...`
     );
@@ -100,6 +101,20 @@ async function handleRemote(args: {
     if (response.ok) {
       const content = await response.text();
       const projectName = context.projectName || 'default';
+
+      const cashedFilInfo = getRemoteCashedFileInfo({
+        fileContent: content,
+        remoteUrl: inputSpec,
+      });
+
+      /**
+       * We can compare the hash of the remote file with the cached one
+       */
+      const needToUpdate = compareHash({ context, cashedFilInfo });
+      if (!needToUpdate.updateNeeded) {
+        return Promise.resolve();
+      }
+
       // write the content to .nx-plugin-openapi/{projectName}/api.json
       const apiPath = join(
         context.root,
@@ -113,11 +128,6 @@ async function handleRemote(args: {
         recursive: true,
       });
       writeFileSync(apiPath, content);
-
-      const cashedFilInfo = getRemoteCashedFileInfo({
-        fileContent: content,
-        remoteUrl: inputSpec,
-      });
 
       const cashedFileInfoPath = join(
         context.root,
@@ -153,4 +163,42 @@ function hashFileContent(fileContent: string): string {
   const hash = createHash('sha256');
   hash.update(fileContent, 'utf8');
   return hash.digest('hex');
+}
+
+function compareHash(args: {
+  context: ExecutorContext;
+  cashedFilInfo: RemoteCashedFileInfo;
+}): { updateNeeded: boolean } {
+  const { context, cashedFilInfo } = args;
+  const projectName = context.projectName || 'default';
+
+  // we need to read the cached file info
+  const cashedFileInfoPath = join(
+    context.root,
+    '.nx-plugin-openapi',
+    projectName,
+    'cache-info.json'
+  );
+  // check if the file exists
+  if (!readFileSync(cashedFileInfoPath, { encoding: 'utf8' })) {
+    logger.verbose(
+      `[@lambda-solutions/nx-plugin-openapi] No cached file info found at ${cashedFileInfoPath}.`
+    );
+    return { updateNeeded: true };
+  }
+  const localCashedFileInfo: RemoteCashedFileInfo = JSON.parse(
+    readFileSync(cashedFileInfoPath, { encoding: 'utf8' })
+  );
+
+  if (localCashedFileInfo.hash === cashedFilInfo.hash) {
+    logger.verbose(
+      `[@lambda-solutions/nx-plugin-openapi] Remote file hash matches local cache. No need to update.`
+    );
+    return { updateNeeded: false };
+  } else {
+    logger.verbose(
+      `[@lambda-solutions/nx-plugin-openapi] Remote file hash does not match local cache. Updating...`
+    );
+    return { updateNeeded: true };
+  }
 }
