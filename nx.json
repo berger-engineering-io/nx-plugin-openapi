@@ -47,7 +47,7 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@nx-openapi/workspace-tools:generate-api": {
+    "@lambda-solutions/nx-plugin-openapi:generate-api": {
       "cache": true,
       "inputs": [
         "{projectRoot}/swagger.json",
