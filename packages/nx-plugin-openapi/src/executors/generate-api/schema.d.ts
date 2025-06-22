@@ -6,4 +6,5 @@ export interface GenerateApiExecutorSchema {
   outputPath: string;
   configFile?: string;
   skipValidateSpec?: boolean;
+  pluginMetadataDir?: string;
 } // eslint-disable-line

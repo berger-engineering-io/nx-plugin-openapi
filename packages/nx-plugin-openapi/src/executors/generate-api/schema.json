@@ -26,6 +26,11 @@
       "type": "boolean",
       "description": "Whether to skip validation of the OpenAPI specification",
       "default": false
+    },
+    "pluginMetadataDir": {
+      "type": "string",
+      "description": "Local directory to store plugin metadata",
+      "default": "nx-plugin-openapi"
     }
   },
   "required": [
