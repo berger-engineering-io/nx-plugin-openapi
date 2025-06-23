@@ -7,9 +7,7 @@ import {
 } from '@nx/devkit';
 import { z } from 'zod';
 import { join } from 'path';
-import { getpluginMetadataDir } from './utils/get-plugin-metadata-dir';
 import { existsSync, readFileSync } from 'fs';
-import { RemoteCashedFileInfoSchema } from './remote-cashed-file-info';
 import { createHash } from 'crypto';
 
 const GenerateApiExecutorSchema = z.object({
@@ -22,118 +20,10 @@ const GenerateApiExecutorSchema = z.object({
 });
 
 /**
- * Ablauf:
- * Hasher
- * - check if inputSpec is a URL
- * - check if cache-file exists
- * - if yes, read the file and create hash for the task
- * - if no, use the default hasher
- *
- * Executor
- * - create the cache file with the hash
- */
-
-/**
  * This is a boilerplate custom hasher that matches
  * the default Nx hasher. If you need to extend the behavior,
  * you can consume workspace details from the context.
  */
-export const generateApiHasher: CustomHasher = async (task, context) => {
-  // need options when executing a task with executor
-  // inputSpec, pluginMetadataDir, projectName, outputDir, context.root
-  // context.root = /Users/michaelberger/Documents/dev/_berg-eng/nx-plugin-openapi when execturer runs
-
-  // getCwd() equals context.root from ExecutorContext
-  const contextRoot = workspaceRoot;
-
-  const taskTargetProject = task.target.project;
-  const taskTargetTarget = task.target.target;
-
-  const targetProject =
-    context.projectsConfigurations.projects[taskTargetProject];
-  const targetProjectTarget = targetProject.targets[taskTargetTarget];
-  const projectName = targetProject.name;
-
-  try {
-    const targetProjectOptions = GenerateApiExecutorSchema.parse(
-      targetProjectTarget.options
-    );
-
-    // check if inputSpec is a URL
-    const parseInputSpecResult = z
-      .string()
-      .url()
-      .safeParse(targetProjectOptions.inputSpec);
-    if (parseInputSpecResult.success) {
-      logger.verbose(
-        '[@lambda-solutions/nx-plugin-openapi] Remote URL detected for inputSpec.'
-      );
-      // check if the cache-file exists
-      const cashedFileInfoPath = join(
-        //context.root,
-        contextRoot,
-        getpluginMetadataDir(targetProjectOptions.pluginMetadataDir),
-        projectName,
-        'cache-info.json'
-      );
-
-      if (!existsSync(cashedFileInfoPath)) {
-        logger.verbose(
-          '[@lambda-solutions/nx-plugin-openapi] No cached file info found. Using default hasher.'
-        );
-        return context.hasher.hashTask(task, context.taskGraph);
-      }
-
-      logger.verbose(
-        `[@lambda-solutions/nx-plugin-openapi] Cached file info found at ${cashedFileInfoPath}.`
-      );
-      const localCashedFileInfoParseResult =
-        RemoteCashedFileInfoSchema.safeParse(
-          JSON.parse(readFileSync(cashedFileInfoPath, { encoding: 'utf8' }))
-        );
-
-      if (localCashedFileInfoParseResult.success) {
-        // TODO create a hash based on remote url and the hash from the cached file info
-        //const hash = localCashedFileInfoParseResult.data.hash;
-        //const remoteUrl = localCashedFileInfoParseResult.data.remoteUrl;
-        // task , context.taskGraph, env
-        const remoteUrl = localCashedFileInfoParseResult.data.remoteUrl;
-        const openApiHash = localCashedFileInfoParseResult.data.hash;
-        const taskHash = await context.hasher.hashTask(
-          task,
-          context.taskGraph,
-          process.env
-        );
-        const hash: Hash = {
-          value: hashArray([taskHash.value, remoteUrl, openApiHash]),
-          details: {
-            command: taskHash.details.command,
-            nodes: taskHash.details.nodes,
-            implicitDeps: taskHash.details.implicitDeps,
-            runtime: taskHash.details.runtime,
-          },
-        };
-        return Promise.resolve(hash);
-      }
-
-      if (!localCashedFileInfoParseResult.success) {
-        logger.error(
-          '[@lambda-solutions/nx-plugin-openapi] Error parsing cached file info. Using default hasher.'
-        );
-      }
-    }
-
-    if (!parseInputSpecResult.success) {
-      return context.hasher.hashTask(task, context.taskGraph);
-    }
-  } catch (error) {
-    logger.error(
-      `[@lambda-solutions/nx-plugin-openapi] Error parsing task options: ${error}`
-    );
-  }
-
-  // return context.hasher.hashTask(task, context.taskGraph);
-};
 
 export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   const contextRoot = workspaceRoot;
