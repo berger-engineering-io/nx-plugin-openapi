@@ -5,6 +5,7 @@ import { join } from 'path';
 import { GenerateApiExecutorSchema } from './schema';
 import { RemoteCashedFileInfo } from './remote-cashed-file-info';
 import { createHash } from 'crypto';
+import { getpluginMetadataDir } from './utils/get-plugin-metadata-dir';
 
 const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   options,
@@ -43,13 +44,15 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     const fullOutputPath = join(context.root, outputPath);
     rmSync(fullOutputPath, { recursive: true, force: true });
 
+    /**
+     * TODO
+     * We need to hook up with the nx hasher
+     */
+    //await handleRemote({ context, options });
     execSync(command, {
       stdio: 'inherit',
       cwd: context.root,
     });
-
-    // currently disabled
-    await handleRemote({ context, options });
 
     logger.info(
       `[@lambda-solutions/nx-plugin-openapi] API generation completed successfully.`
@@ -209,8 +212,4 @@ function compareHash(args: {
     );
     return { updateNeeded: true };
   }
-}
-
-function getpluginMetadataDir(optionPath?: string) {
-  return optionPath ? `.${optionPath}` : '.nx-plugin-openapi';
 }
