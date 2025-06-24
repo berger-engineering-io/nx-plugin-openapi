@@ -42,11 +42,6 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
     const fullOutputPath = join(context.root, outputPath);
     rmSync(fullOutputPath, { recursive: true, force: true });
 
-    /**
-     * TODO
-     * We need to hook up with the nx hasher
-     */
-    //await handleRemote({ context, options });
     execSync(command, {
       stdio: 'inherit',
       cwd: context.root,
