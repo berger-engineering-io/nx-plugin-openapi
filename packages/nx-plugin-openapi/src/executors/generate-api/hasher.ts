@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { z } from 'zod';
 import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, rmSync } from 'fs';
 import { createHash } from 'crypto';
 
 const GenerateApiExecutorSchema = z.object({
@@ -34,7 +34,6 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   const targetProject =
     context.projectsConfigurations.projects[taskTargetProject];
   const targetProjectTarget = targetProject.targets[taskTargetTarget];
-  const projectName = targetProject.name;
 
   const targetProjectOptionsParseResult = GenerateApiExecutorSchema.safeParse(
     targetProjectTarget.options
@@ -45,8 +44,15 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     logger.error(
       `[@lambda-solutions/nx-plugin-openapi] Error parsing executor options for task ${task.target.target}`
     );
+    throw new Error(
+      `[@lambda-solutions/nx-plugin-openapi] Error parsing executor options for task ${task.target.target}: ${targetProjectOptionsParseResult.error.message}`
+    );
   }
   const targetProjectOptions = targetProjectOptionsParseResult.data;
+  // Clean the output directory before generating
+  //const fullOutputPath = join(contextRoot, targetProjectOptions.outputPath);
+  //rmSync(fullOutputPath, { recursive: true, force: true });
+
   // Check if inputSpec is url or not
   const parseInputSpecResult = z
     .string()
@@ -84,7 +90,6 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     }
   }
 
-  // TODO
   // case URl
   // fetch content and hash it
   // nx hasher: content and url
@@ -129,6 +134,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   }
 
   // optional for both cases - store stuff in .nx-openapi-plugin folder?
+  return await context.hasher.hashTask(task, context.taskGraph, process.env);
 };
 
 export default correctgenerateApiHasher;
