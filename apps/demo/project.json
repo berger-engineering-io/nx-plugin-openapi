@@ -8,7 +8,6 @@
   "targets": {
     "generate-api": {
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
-      "inputs": ["{workspaceRoot}/config.json"],
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "apps/demo/src/app/api",
