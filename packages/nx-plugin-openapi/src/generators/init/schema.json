@@ -4,7 +4,11 @@
   "title": "",
   "type": "object",
   "properties": {
-
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files after generator runs",
+      "default": false
+    }
   },
   "required": []
 }
