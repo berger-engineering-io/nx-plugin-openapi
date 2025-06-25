@@ -6,9 +6,21 @@ Nx Plugin for seamless Nx integration of [OpenApi Generator](https://openapi-gen
 
 ## Installation
 
+To install the Plugin in your Nx workspace, run the following command:
+```bash
+nx add @lambda-solutions/nx-plugin-openapi
+```
+
+Or if you prefer to install it manually, you can add it as a dev dependency:
 ```bash
 npm install --save-dev @lambda-solutions/nx-plugin-openapi
 ```
+### Options for `nx add`
+You can also specify options when running `nx add` by appending them via `--{optionName}=value`.
+
+Following options are available:
+- `--skipFormat`: If set to `true`, the plugin will not format the workspace after installation. Default is `false`.
+
 
 ## Prerequisites
 
