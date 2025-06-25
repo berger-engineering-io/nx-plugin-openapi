@@ -17,7 +17,13 @@ module.exports = [
     },
   },
   {
-    files: ['**/package.json', '**/package.json', '**/executors.json'],
+    files: [
+      '**/package.json',
+      '**/executors.json',
+      '**/package.json',
+      '**/generators.json',
+      '**/executors.json',
+    ],
     rules: {
       '@nx/nx-plugin-checks': 'error',
     },

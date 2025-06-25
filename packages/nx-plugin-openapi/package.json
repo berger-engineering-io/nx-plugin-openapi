@@ -2,6 +2,7 @@
   "name": "@lambda-solutions/nx-plugin-openapi",
   "version": "0.0.1",
   "dependencies": {
+    "@nx/devkit": "19.8.14",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
@@ -11,5 +12,6 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "generators": "./generators.json"
 }
