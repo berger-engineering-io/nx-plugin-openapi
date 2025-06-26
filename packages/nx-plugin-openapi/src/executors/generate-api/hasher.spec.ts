@@ -1,13 +1,13 @@
-import { TaskHasher, HasherContext } from '@nx/devkit';
+import { HasherContext, TaskHasher } from '@nx/devkit';
 
-import { generateApiHasher } from './hasher';
+import { correctgenerateApiHasher } from './hasher';
 
 describe('generateApiHasher', () => {
   it('should generate hash', async () => {
     const mockHasher: TaskHasher = {
       hashTask: jest.fn().mockReturnValue({ value: 'hashed-task' }),
     } as unknown as TaskHasher;
-    const hash = await generateApiHasher(
+    const hash = await correctgenerateApiHasher(
       {
         id: 'my-task-id',
         target: {

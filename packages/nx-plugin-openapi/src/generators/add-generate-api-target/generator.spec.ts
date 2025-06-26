@@ -8,6 +8,8 @@ import {
 } from '@nx/devkit';
 import { addGenerateApiGenerator } from './generator';
 import { AddGenerateApiSchema } from './schema';
+import { addGitIgnoreEntry } from '../utils/add-gitignore-entry';
+import { addPrettierIgnoreEntry } from '../utils/add-prettier-ignore-entry';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
@@ -18,12 +20,22 @@ jest.mock('@nx/devkit', () => ({
   },
 }));
 
+jest.mock('../utils/add-gitignore-entry', () => ({
+  addGitIgnoreEntry: jest.fn(),
+}));
+
+jest.mock('../utils/add-prettier-ignore-entry', () => ({
+  addPrettierIgnoreEntry: jest.fn(),
+}));
+
 describe('add-generate-api-target generator', () => {
   let tree: Tree;
   const mockedFormatFiles = formatFiles as jest.MockedFunction<
     typeof formatFiles
   >;
   const mockedLogger = logger as jest.Mocked<typeof logger>;
+  const mockedAddGitIgnoreEntry = addGitIgnoreEntry as jest.MockedFunction<typeof addGitIgnoreEntry>;
+  const mockedAddPrettierIgnoreEntry = addPrettierIgnoreEntry as jest.MockedFunction<typeof addPrettierIgnoreEntry>;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -93,8 +105,10 @@ describe('add-generate-api-target generator', () => {
 
     await addGenerateApiGenerator(tree, options);
 
-    const gitignoreContent = tree.read('.gitignore', 'utf-8');
-    expect(gitignoreContent).toContain('libs/generated-api');
+    expect(mockedAddGitIgnoreEntry).toHaveBeenCalledWith({
+      tree,
+      entry: 'libs/generated-api',
+    });
   });
 
   it('should not add to .gitignore when addToGitignore is false', async () => {
@@ -107,13 +121,10 @@ describe('add-generate-api-target generator', () => {
 
     await addGenerateApiGenerator(tree, options);
 
-    const gitignoreContent = tree.read('.gitignore', 'utf-8');
-    expect(gitignoreContent).not.toContain('libs/generated-api');
+    expect(mockedAddGitIgnoreEntry).not.toHaveBeenCalled();
   });
 
-  it('should warn when .gitignore does not exist', async () => {
-    tree.delete('.gitignore');
-
+  it('should call gitignore utility when addToGitignore is true', async () => {
     const options: AddGenerateApiSchema = {
       project: 'test-app',
       inputSpec: 'swagger.json',
@@ -123,14 +134,13 @@ describe('add-generate-api-target generator', () => {
 
     await addGenerateApiGenerator(tree, options);
 
-    expect(mockedLogger.warn).toHaveBeenCalledWith(
-      "Couldn't find .gitignore file to update"
-    );
+    expect(mockedAddGitIgnoreEntry).toHaveBeenCalledWith({
+      tree,
+      entry: 'libs/api',
+    });
   });
 
-  it('should add to .prettierignore when it exists', async () => {
-    tree.write('.prettierignore', 'coverage\n*.log\n');
-
+  it('should add to .prettierignore when addToGitignore is true', async () => {
     const options: AddGenerateApiSchema = {
       project: 'test-app',
       inputSpec: 'swagger.json',
@@ -140,8 +150,10 @@ describe('add-generate-api-target generator', () => {
 
     await addGenerateApiGenerator(tree, options);
 
-    const prettierIgnoreContent = tree.read('.prettierignore', 'utf-8');
-    expect(prettierIgnoreContent).toContain('libs/api-client');
+    expect(mockedAddPrettierIgnoreEntry).toHaveBeenCalledWith({
+      tree,
+      entry: 'libs/api-client',
+    });
   });
 
   it('should log info if target already exists', async () => {
