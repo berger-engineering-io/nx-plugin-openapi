@@ -8,6 +8,7 @@ import {
 import { AddGenerateApiSchema } from './schema';
 import { addGitIgnoreEntry } from '../utils/add-gitignore-entry';
 import { addPrettierIgnoreEntry } from '../utils/add-prettier-ignore-entry';
+import { log } from '../utils/log';
 
 export async function addGenerateApiGenerator(
   tree: Tree,
@@ -21,7 +22,9 @@ export async function addGenerateApiGenerator(
   // Check if target already exists
   if (projectConfig.targets?.[targetName]) {
     logger.info(
-      `[@lambda-solutions/nx-plugin-openapi] Target "${targetName}" already exists in project "${options.project}. We will skip now."`
+      log(
+        `Target "${targetName}" already exists in project "${options.project}. We will skip now."`
+      )
     );
     return Promise.resolve();
   }
@@ -56,7 +59,9 @@ export async function addGenerateApiGenerator(
   await formatFiles(tree);
 
   logger.info(
-    `[@lambda-solutions/nx-plugin-openapi] ✨ Successfully added ${targetName} target to ${options.project} project`
+    log(
+      `✨ Successfully added ${targetName} target to ${options.project} project`
+    )
   );
 }
 

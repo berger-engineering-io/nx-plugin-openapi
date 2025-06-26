@@ -1,8 +1,9 @@
-import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
+import { ExecutorContext, logger, PromiseExecutor } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { rmSync } from 'fs';
 import { join } from 'path';
 import { GenerateApiExecutorSchema } from './schema';
+import { log } from '../../generators/utils/log';
 
 const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   options,
@@ -31,13 +32,8 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
       command += ` --skip-validate-spec`;
     }
 
-    console.log(`Running command: ${command}`);
-    logger.info(
-      '[@lambda-solutions/nx-plugin-openapi] Starting to generate API from provided OpenAPI spec...'
-    );
-    logger.verbose(
-      `[@lambda-solutions/nx-plugin-openapi] Cleaning outputPath ${outputPath} first`
-    );
+    logger.info(log('Starting to generate API from provided OpenAPI spec...'));
+    logger.verbose(log(`Cleaning outputPath ${outputPath} first`));
     // Clean the output directory before generating
     const fullOutputPath = join(context.root, outputPath);
     rmSync(fullOutputPath, { recursive: true, force: true });
@@ -47,16 +43,12 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
       cwd: context.root,
     });
 
-    logger.info(
-      `[@lambda-solutions/nx-plugin-openapi] API generation completed successfully.`
-    );
+    logger.info(log(`API generation completed successfully.`));
     return {
       success: true,
     };
   } catch (error) {
-    logger.error(
-      `[@lambda-solutions/nx-plugin-openapi] API generation failed with error`
-    );
+    logger.error(log(`API generation failed with error`));
     logger.error(error);
     return {
       success: false,

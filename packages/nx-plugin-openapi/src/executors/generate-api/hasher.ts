@@ -1,14 +1,15 @@
 import {
   CustomHasher,
-  logger,
   Hash,
   hashArray,
+  logger,
   workspaceRoot,
 } from '@nx/devkit';
 import { z } from 'zod';
 import { join } from 'path';
-import { existsSync, readFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { createHash } from 'crypto';
+import { log } from '../../generators/utils/log';
 
 const GenerateApiExecutorSchema = z.object({
   inputSpec: z.string(),
@@ -42,7 +43,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   if (!targetProjectOptionsParseResult.success) {
     // TODO think about what to do here
     logger.error(
-      `[@lambda-solutions/nx-plugin-openapi] Error parsing executor options for task ${task.target.target}`
+      log(`Error parsing executor options for task ${task.target.target}`)
     );
     throw new Error(
       `[@lambda-solutions/nx-plugin-openapi] Error parsing executor options for task ${task.target.target}: ${targetProjectOptionsParseResult.error.message}`
@@ -69,9 +70,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   // read content and create hash for it
   // nx hasher: fileContent and file name
   if (!parseInputSpecResult.success) {
-    logger.verbose(
-      '[@lambda-solutions/nx-plugin-openapi] Local file detected for inputSpec.'
-    );
+    logger.verbose(log('Local file detected for inputSpec.'));
     const inputSpecPath = join(contextRoot, targetProjectOptions.inputSpec);
     if (existsSync(inputSpecPath)) {
       const fileContent = readFileSync(inputSpecPath, { encoding: 'utf8' });
@@ -94,20 +93,16 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
   // fetch content and hash it
   // nx hasher: content and url
   if (parseInputSpecResult.success) {
-    logger.verbose(
-      '[@lambda-solutions/nx-plugin-openapi] Remote URL detected for inputSpec.'
-    );
+    logger.verbose(log('Remote URL detected for inputSpec.'));
 
     const inputSpecUrl = targetProjectOptions.inputSpec;
 
-    logger.verbose(
-      `[@lambda-solutions/nx-plugin-openapi] Fetching remote OpenAPI spec...`
-    );
+    logger.verbose(log(`Fetching remote OpenAPI spec...`));
     const response = await fetch(inputSpecUrl);
 
     if (!response.ok) {
       logger.error(
-        `[@lambda-solutions/nx-plugin-openapi] Failed to fetch remote OpenAPI spec: ${response.statusText}`
+        log(`Failed to fetch remote OpenAPI spec: ${response.statusText}`)
       );
       return Promise.reject(
         new Error(`Failed to fetch remote OpenAPI spec: ${response.statusText}`)
@@ -115,7 +110,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     }
 
     logger.verbose(
-      `[@lambda-solutions/nx-plugin-openapi] Remote OpenAPI spec fetched successfully. Now hashing the content.`
+      log(`Remote OpenAPI spec fetched successfully. Now hashing the content.`)
     );
 
     const content = await response.text();

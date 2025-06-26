@@ -6,6 +6,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
+import { log } from '../utils/log';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   updateTargetDefaults(tree);
@@ -14,9 +15,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     await formatFiles(tree);
   }
 
-  logger.info(
-    '[@lambda-solutions/nx-plugin-openapi]✨ Plugin initialized successfully!'
-  );
+  logger.info(log('✨ Plugin initialized successfully!'));
 }
 
 function updateTargetDefaults(tree: Tree): void {
