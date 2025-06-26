@@ -1,6 +1,7 @@
 import {
   formatFiles,
   logger,
+  ProjectConfiguration,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -26,27 +27,11 @@ export async function addGenerateApiGenerator(
         `Target "${targetName}" already exists in project "${options.project}. We will skip now."`
       )
     );
-    return Promise.resolve();
+    return;
   }
 
   // Add the new target
-  projectConfig.targets = {
-    ...projectConfig.targets,
-    [targetName]: {
-      executor: '@lambda-solutions/nx-plugin-openapi:generate-api',
-      options: {
-        inputSpec: options.inputSpec,
-        outputPath: options.outputPath,
-        // Uncomment if we want to support different generator types in the future
-        // generatorType: options.generatorType || 'typescript-angular',
-        ...(options.configFile && { configFile: options.configFile }),
-        ...(options.skipValidateSpec && {
-          skipValidateSpec: options.skipValidateSpec,
-        }),
-      },
-      outputs: ['{options.outputPath}'],
-    },
-  };
+  addTarget({ projectConfig, targetName, options });
 
   // Update the project configuration
   updateProjectConfiguration(tree, options.project, projectConfig);
@@ -67,3 +52,29 @@ export async function addGenerateApiGenerator(
 }
 
 export default addGenerateApiGenerator;
+
+function addTarget(args: {
+  projectConfig: ProjectConfiguration;
+  options: AddGenerateApiSchema;
+  targetName: string;
+}) {
+  const { options } = args;
+  // Add the new target
+  args.projectConfig.targets = {
+    ...args.projectConfig.targets,
+    [args.targetName]: {
+      executor: '@lambda-solutions/nx-plugin-openapi:generate-api',
+      options: {
+        inputSpec: options.inputSpec,
+        outputPath: options.outputPath,
+        // Uncomment if we want to support different generator types in the future
+        // generatorType: options.generatorType || 'typescript-angular',
+        ...(options.configFile && { configFile: options.configFile }),
+        ...(options.skipValidateSpec && {
+          skipValidateSpec: options.skipValidateSpec,
+        }),
+      },
+      outputs: ['{options.outputPath}'],
+    },
+  };
+}
