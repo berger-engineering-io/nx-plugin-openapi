@@ -44,6 +44,7 @@ export async function addGenerateApiGenerator(
           skipValidateSpec: options.skipValidateSpec,
         }),
       },
+      outputs: ['{options.outputPath}'],
     },
   };
 
