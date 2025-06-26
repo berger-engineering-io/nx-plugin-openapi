@@ -4,6 +4,11 @@
       "factory": "./src/generators/init/generator",
       "schema": "./src/generators/init/schema.json",
       "description": "Setup nx-plugin-openapi"
+    },
+    "add-generate-api-target": {
+      "factory": "./src/generators/add-generate-api-target/generator",
+      "schema": "./src/generators/add-generate-api-target/schema.json",
+      "description": "Add generate API target to a project"
     }
   }
 }
