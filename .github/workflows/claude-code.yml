@@ -1,13 +1,21 @@
 name: Claude Assistant
 on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned, labeled]
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+    types: [opened, reopened]
+    branches: [main]
+    paths:
+      - 'libs/**'
+      - 'apps/**'
+      - '**.ts'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+concurrency:
+  group: 'pr-review-${{ github.event.pull_request.number }}'
+  cancel-in-progress: true
 
 jobs:
   claude-response:
@@ -17,6 +25,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_API }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_tools: 'Bash,mcp__github__add_pull_request_review_comment,mcp__github__get_pull_request,mcp__github__get_pull_request_files,mcp__github__list_pull_requests,mcp__github__create_issue,mcp__github__get_file_contents'
           # Optional: add custom trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
           # Optional: add assignee trigger for issues
@@ -29,4 +38,40 @@ jobs:
           #   DEBUG: true
           #   API_URL: https://api.example.com
           # Optional: limit the number of conversation turns
-          # max_turns: "5"
+          max_turns: "5"
+          direct_prompt: |
+            You are a an expert software engineer and code reviewer.
+
+            You are very proficient in TypeScript, Angular and Nx.
+
+            ## Your Task
+            Analyze this Pull Request against Best Practices, optimizations and logical errors. provide a comprehensive review by posting a comment directly to the PR.
+
+            ## information
+            - **PR Context**: You are reviewing a PR that may include changes to multiple libraries and applications in an Nx workspace.
+            - **Review Context**: Either in CLAUDE.md or in docs/claude/claude-review.md you may find additional context for your review.
+
+            ## Current PR Context
+            - **Repository**: ${{ github.repository }}
+            - **PR Number**: ${{ github.event.pull_request.number }}
+            - **PR Title**: "${{ github.event.pull_request.title }}"
+
+            ## Available Tools & Commands
+            - **Filesystem**: `mcp__filesystem__read_file`, `mcp__filesystem__read_multiple_files`, `mcp__filesystem__list_directory`, `mcp__filesystem__search_files`
+            - **Git**: `mcp__git__git_status`, `mcp__git__git_log`, `mcp__git__git_show`
+            - **GitHub**: `mcp__github__get_pull_request`, `mcp__github__get_pull_request_files`, `mcp__github__add_pull_request_review_comment`
+            - **Nx via Bash**:
+              - `Bash(npx nx show projects --affected)` - Get affected projects
+              - `Bash(npx nx show project <project-name>)` - Get project details
+              - `Bash(npx nx graph --file=graph.json)` - Generate project graph
+              - `Bash(git diff --name-only HEAD~1 HEAD)` - Get changed files
+
+            ## Quick Reference - Key Tools
+            - `mcp__github__get_pull_request` - Get PR details and metadata
+            - `mcp__github__get_pull_request_files` - See all changed files
+            - `mcp__filesystem__read_file` - Read the methodology file and examine changed files
+            - `mcp__filesystem__list_directory` - List ADR files in `docs/decisions/`
+            - `mcp__filesystem__read_multiple_files` - Read all ADR files
+            - `Bash(npx nx show projects --affected)` - Get affected Nx projects
+            - `mcp__github__add_pull_request_review_comment` - Post review comment
+
