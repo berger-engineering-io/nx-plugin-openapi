@@ -24,7 +24,7 @@ jobs:
       - uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_API }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.CLAUDE_TOKEN }}
           allowed_tools: 'Bash,mcp__github__add_pull_request_review_comment,mcp__github__get_pull_request,mcp__github__get_pull_request_files,mcp__github__list_pull_requests,mcp__github__create_issue,mcp__github__get_file_contents'
           # Optional: add custom trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
