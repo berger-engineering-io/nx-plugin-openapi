@@ -14,7 +14,7 @@ on:
         description: 'PR number to review'
         required: true
 concurrency:
-  group: 'pr-review-${{ github.event.pull_request.number }}'
+  group: 'pr-review-${{ github.event.pull_request.number || github.event.inputs.pr_number }}'
   cancel-in-progress: true
 
 jobs:
