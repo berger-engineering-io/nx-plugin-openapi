@@ -197,7 +197,7 @@ describe('GenerateApi Executor', () => {
 
       expect(result.success).toBe(true);
       expect(mockExecSync).toHaveBeenCalledWith(
-        expect.not.stringContaining('--skip-validate-spec'),
+        expect.not.stringMatching(/--skip-validate-spec/),
         expect.any(Object)
       );
     });
