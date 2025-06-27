@@ -40,7 +40,7 @@ jobs:
           # Optional: limit the number of conversation turns
           max_turns: "5"
           direct_prompt: |
-            You are a an expert software engineer and code reviewer.
+            You are an expert software engineer and code reviewer.
 
             You are very proficient in TypeScript, Angular and Nx.
 
