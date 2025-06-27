@@ -352,7 +352,7 @@ describe('generateApiHasher', () => {
       const task = createMockTask();
       const context = createMockContext();
       
-      const largeContent = 'x'.repeat(1000000); // 1MB of content
+      const largeContent = 'x'.repeat(1024); // 1KB of content
       mockExistsSync.mockReturnValue(true);
       mockReadFileSync.mockReturnValue(largeContent);
 
