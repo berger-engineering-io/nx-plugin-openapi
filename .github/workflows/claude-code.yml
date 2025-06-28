@@ -1,4 +1,5 @@
 name: Claude Assistant
+permissions: write-all
 on:
   pull_request:
     types: [opened, reopened]
