@@ -6,4 +6,4 @@ export interface GenerateApiExecutorSchema {
   outputPath: string;
   configFile?: string;
   skipValidateSpec?: boolean;
-} // eslint-disable-line
+}  
