@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "dependencies": {
     "@nx/devkit": "19.8.14",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "^3.25.67"
   },
   "peerDependencies": {
-    "@openapitools/openapi-generator-cli": ">2.0.0",
-    "@nx/devkit": ">19.0.0"
+    "@nx/devkit": ">19.0.0",
+    "@openapitools/openapi-generator-cli": ">2.0.0"
   },
   "type": "commonjs",
   "main": "./src/index.js",

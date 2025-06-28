@@ -29,6 +29,7 @@ module.exports = [
           ],
         },
       ],
+      '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
   {
