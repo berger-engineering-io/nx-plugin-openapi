@@ -6,7 +6,7 @@ module.exports = [
     files: ['**/*.json'],
     rules: {
       '@nx/dependency-checks': [
-        'warn',
+        'error',
         {
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
         },
