@@ -27,10 +27,10 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const dependencies = packageJson.dependencies || {};
   const devDependencies = packageJson.devDependencies || {};
   const tasks: GeneratorCallback[] = [];
-
+  const packageName = '@openapitools/openapi-generator-cli';
   const openApiGeneratorCliVersion =
-    (dependencies && dependencies['@openapitools/openapi-generator-cli']) ||
-    (devDependencies && devDependencies['@openapitools/openapi-generator-cli']);
+    (dependencies && dependencies[packageName]) ||
+    (devDependencies && devDependencies[packageName]);
   if (!openApiGeneratorCliVersion) {
     tasks.push(
       addDependenciesToPackageJson(
@@ -44,7 +44,9 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   }
 
   if (openApiGeneratorCliVersion) {
-    const version = getPackageVersion(openApiGeneratorCliVersion);
+    const version = getPackageVersion({
+      [packageName]: openApiGeneratorCliVersion,
+    });
 
     if (version.major < 2) {
       logger.warn(
