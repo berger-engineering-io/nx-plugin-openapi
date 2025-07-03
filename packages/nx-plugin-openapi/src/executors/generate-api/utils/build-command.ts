@@ -40,8 +40,14 @@ const OPTION_FLAG_MAP: OptionFlagMap = {
   templateDirectory: '--template-dir',
 };
 
-export function buildCommandFlags(options: GenerateApiExecutorSchema): string {
-  const flags: string[] = [];
+export function buildCommandArgs(options: GenerateApiExecutorSchema): string[] {
+  const args: string[] = [];
+
+  // Add base command arguments
+  args.push('generate');
+  args.push('-i', options.inputSpec);
+  args.push('-g', 'typescript-angular');
+  args.push('-o', options.outputPath);
 
   // Handle regular options
   for (const [optionKey, flagConfig] of Object.entries(OPTION_FLAG_MAP)) {
@@ -60,19 +66,18 @@ export function buildCommandFlags(options: GenerateApiExecutorSchema): string {
       typeof flagConfig === 'string' ? { flag: flagConfig } : flagConfig;
 
     if (typeof value === 'boolean' && value === true) {
-      flags.push(config.flag);
+      args.push(config.flag);
     } else if (typeof value === 'string') {
-      const formattedValue = config.requiresQuotes ? `"${value}"` : value;
-      flags.push(`${config.flag} ${formattedValue}`);
+      args.push(config.flag, value);
     }
   }
 
   // Handle globalProperties separately as it requires special handling
   if (options.globalProperties) {
     Object.entries(options.globalProperties).forEach(([key, value]) => {
-      flags.push(`--global-property ${key}=${value}`);
+      args.push('--global-property', `${key}=${value}`);
     });
   }
 
-  return flags.length > 0 ? ` ${flags.join(' ')}` : '';
+  return args;
 }
