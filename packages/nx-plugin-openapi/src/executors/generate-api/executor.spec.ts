@@ -1,5 +1,7 @@
 import { ExecutorContext } from '@nx/devkit';
 import { GenerateApiExecutorSchema } from './schema';
+// Import the executor after setting up mocks
+import executor from './executor';
 
 // Mock external dependencies before importing the executor
 const mockExecSync = jest.fn();
@@ -31,9 +33,6 @@ jest.mock('@nx/devkit', () => ({
 jest.mock('../../generators/utils/log', () => ({
   log: mockLog,
 }));
-
-// Import the executor after setting up mocks
-import executor from './executor';
 
 describe('GenerateApi Executor', () => {
   const baseContext: ExecutorContext = {
@@ -76,10 +75,13 @@ describe('GenerateApi Executor', () => {
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(true);
-      expect(mockRmSync).toHaveBeenCalledWith('/test/workspace/libs/api-client', {
-        recursive: true,
-        force: true,
-      });
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/test/workspace/libs/api-client',
+        {
+          recursive: true,
+          force: true,
+        }
+      );
       expect(mockExecSync).toHaveBeenCalledWith(
         'node node_modules/@openapitools/openapi-generator-cli/main.js generate -i openapi.json -g typescript-angular -o libs/api-client',
         {
@@ -87,15 +89,18 @@ describe('GenerateApi Executor', () => {
           cwd: '/test/workspace',
         }
       );
-      expect(mockLogger.info).toHaveBeenCalledWith('[test] Starting to generate API from provided OpenAPI spec...');
-      expect(mockLogger.info).toHaveBeenCalledWith('[test] API generation completed successfully.');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] Starting to generate API from provided OpenAPI spec...'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] API generation completed successfully.'
+      );
     });
 
     it('should execute with all options provided', async () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: 'swagger.yaml',
         outputPath: 'libs/generated-api',
-        generatorType: 'typescript-angular',
         configFile: 'openapi-config.json',
         skipValidateSpec: true,
       };
@@ -212,12 +217,20 @@ describe('GenerateApi Executor', () => {
 
       await executor(options, baseContext);
 
-      expect(mockJoin).toHaveBeenCalledWith('/test/workspace', 'libs/api-client');
-      expect(mockRmSync).toHaveBeenCalledWith('/test/workspace/libs/api-client', {
-        recursive: true,
-        force: true,
-      });
-      expect(mockLogger.verbose).toHaveBeenCalledWith('[test] Cleaning outputPath libs/api-client first');
+      expect(mockJoin).toHaveBeenCalledWith(
+        '/test/workspace',
+        'libs/api-client'
+      );
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/test/workspace/libs/api-client',
+        {
+          recursive: true,
+          force: true,
+        }
+      );
+      expect(mockLogger.verbose).toHaveBeenCalledWith(
+        '[test] Cleaning outputPath libs/api-client first'
+      );
     });
 
     it('should execute command with correct working directory', async () => {
@@ -230,13 +243,10 @@ describe('GenerateApi Executor', () => {
 
       await executor(options, baseContext);
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.any(String),
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
-      );
+      expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), {
+        stdio: 'inherit',
+        cwd: '/test/workspace',
+      });
     });
   });
 
@@ -255,7 +265,9 @@ describe('GenerateApi Executor', () => {
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith('[test] API generation failed with error');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[test] API generation failed with error'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(error);
     });
 
@@ -273,7 +285,9 @@ describe('GenerateApi Executor', () => {
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith('[test] API generation failed with error');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[test] API generation failed with error'
+      );
     });
 
     it('should handle non-Error exceptions', async () => {
@@ -289,7 +303,9 @@ describe('GenerateApi Executor', () => {
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith('[test] API generation failed with error');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[test] API generation failed with error'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith('String error');
     });
   });
@@ -315,7 +331,6 @@ describe('GenerateApi Executor', () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: 'full.yaml',
         outputPath: 'full-output',
-        generatorType: 'typescript-angular',
         configFile: 'full-config.json',
         skipValidateSpec: true,
       };
@@ -359,9 +374,15 @@ describe('GenerateApi Executor', () => {
 
       await executor(options, baseContext);
 
-      expect(mockLogger.info).toHaveBeenCalledWith('[test] Starting to generate API from provided OpenAPI spec...');
-      expect(mockLogger.verbose).toHaveBeenCalledWith('[test] Cleaning outputPath test-output first');
-      expect(mockLogger.info).toHaveBeenCalledWith('[test] API generation completed successfully.');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] Starting to generate API from provided OpenAPI spec...'
+      );
+      expect(mockLogger.verbose).toHaveBeenCalledWith(
+        '[test] Cleaning outputPath test-output first'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] API generation completed successfully.'
+      );
     });
 
     it('should log error messages on failure', async () => {
@@ -377,7 +398,9 @@ describe('GenerateApi Executor', () => {
 
       await executor(options, baseContext);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('[test] API generation failed with error');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[test] API generation failed with error'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(error);
     });
   });
@@ -398,11 +421,17 @@ describe('GenerateApi Executor', () => {
 
       await executor(options, contextWithDifferentRoot);
 
-      expect(mockJoin).toHaveBeenCalledWith('/different/workspace/root', 'relative/path');
-      expect(mockRmSync).toHaveBeenCalledWith('/different/workspace/root/relative/path', {
-        recursive: true,
-        force: true,
-      });
+      expect(mockJoin).toHaveBeenCalledWith(
+        '/different/workspace/root',
+        'relative/path'
+      );
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/different/workspace/root/relative/path',
+        {
+          recursive: true,
+          force: true,
+        }
+      );
     });
   });
 
@@ -439,24 +468,6 @@ describe('GenerateApi Executor', () => {
       expect(result.success).toBe(true);
       expect(mockExecSync).toHaveBeenCalledWith(
         'node node_modules/@openapitools/openapi-generator-cli/main.js generate -i test.json -g typescript-angular -o output',
-        expect.any(Object)
-      );
-    });
-
-    it('should handle custom generator type', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        generatorType: 'custom-generator',
-      };
-
-      mockExecSync.mockReturnValue(Buffer.from('success'));
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'node node_modules/@openapitools/openapi-generator-cli/main.js generate -i test.json -g custom-generator -o output',
         expect.any(Object)
       );
     });
