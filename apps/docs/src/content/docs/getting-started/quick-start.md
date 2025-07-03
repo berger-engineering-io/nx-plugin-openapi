@@ -186,5 +186,3 @@ Congratulations! You've successfully generated your first API client. Here's wha
 ### Output Directory Conflicts
 
 The plugin automatically cleans the output directory before generation. Make sure the `outputPath` doesn't contain important files that shouldn't be deleted.
-
-u encounter TypeScript errors in the generated code, ensure your Angular and TypeScript versions are compatible with the generated code.
