@@ -37,7 +37,6 @@ export default defineConfig({
           label: 'API Reference',
           items: [
             { label: 'generate-api executor', slug: 'reference/generate-api' },
-            { label: 'All Options', slug: 'reference/options' },
           ],
         },
         {
