@@ -1,5 +1,5 @@
 # @lambda-solutions/nx-plugin-openapi
-Nx Plugin for seamless Nx integration of [OpenApi Generator](https://openapi-generator.tech)
+Nx Plugin for seamless Nx integration of [OpenApi Generator](https://openapi-generator.tech) Angular client.
 
 ## Features
 * Executor for generating Angular API clients from OpenAPI specifications
@@ -61,8 +61,7 @@ Add the executor to your project's `project.json`:
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "options": {
         "inputSpec": "apps/my-app/swagger.json",
-        "outputPath": "libs/api-client/src",
-        "generatorType": "typescript-angular"
+        "outputPath": "libs/api-client/src"
       },
       "outputs": ["{options.outputPath}"]
     }
@@ -82,7 +81,6 @@ nx run my-app:generate-api
 |--------|------|----------|---------|-------------|
 | `inputSpec` | string | Yes | - | Path to the OpenAPI specification file (local file or URL) |
 | `outputPath` | string | Yes | - | Output directory for the generated client |
-| `generatorType` | string | No | `typescript-angular` | Generator type to use |
 | `configFile` | string | No | - | Path to OpenAPI Generator configuration file |
 | `skipValidateSpec` | boolean | No | `false` | Skip OpenAPI spec validation |
 
@@ -106,10 +104,12 @@ nx run my-app:generate-api
 ```
 
 ### Using a remote OpenAPI spec
-> [!CAUTION]
-> When using a remote OpenAPI spec it is recommended to disable nx caching, as it will not trigger re-computation when the remote spec changes.
+> [!HINT]
+> Nx caching also works when using a remote OpenAPI spec. The executor will cache the generated files based on the content of the OpenAPI spec.
+> This means that if the OpenAPI spec changes, the executor will regenerate the files.
+> If the OpenAPI spec does not change, the executor will use the cached files.
 > 
-> It is on our roadmap tough to add caching support for remote OpenAPI specs.
+> A drawback of this approach is that we always need to fetch the remote OpenAPI spec on each executor run.
 
 
 ```json
