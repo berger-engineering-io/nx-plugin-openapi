@@ -21,6 +21,7 @@ hero:
 
 
 
+
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## Why Nx Plugin OpenAPI?
@@ -48,23 +49,5 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 - **🔄 Smart Caching**: Only regenerates when OpenAPI specs change
 
 ## Quick Example
-
-```json
-{
-  "targets": {
-    "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
-      "options": {
-        "inputSpec": "apps/my-app/swagger.json",
-        "outputPath": "libs/api-client/src"
-      }
-    }
-  }
-}
-```
-
-```bash
-nx run my-app:generate-api
-```
 
 Ready to get started? Check out our [installation guide](/getting-started/installation/) or explore the [examples](/usage/examples/).
