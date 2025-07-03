@@ -1,9 +1,14 @@
+import { log } from './log';
+
 export function getPackageVersion(packageEntry: Record<string, string>): {
   major: number;
   minor: number;
   patch: number;
   package: Record<string, string>;
 } {
+  if (Object.entries(packageEntry).length === 0) {
+    throw new Error(log('No package entries provided'));
+  }
   const [, versionString] = Object.entries(packageEntry)[0];
 
   // Remove any version prefix (^, ~, >=, >, <=, <, =, etc.)
