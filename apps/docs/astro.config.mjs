@@ -4,23 +4,47 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	integrations: [
-		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
-			sidebar: [
-				{
-					label: 'Guides',
-					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
-					],
-				},
-				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
-				},
-			],
-		}),
-	],
+  integrations: [
+    starlight({
+      title: 'Nx Plugin OpenAPI',
+      description:
+        'Nx Plugin for seamless integration of OpenAPI Generator Angular client',
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/lambda-solutions/nx-plugin-openapi',
+        },
+      ],
+      sidebar: [
+        {
+          label: 'Getting Started',
+          items: [
+            { label: 'Overview', slug: 'getting-started/overview' },
+            { label: 'Installation', slug: 'getting-started/installation' },
+            { label: 'Quick Start', slug: 'getting-started/quick-start' },
+          ],
+        },
+        {
+          label: 'Usage',
+          items: [
+            { label: 'Configuration', slug: 'usage/configuration' },
+            { label: 'Examples', slug: 'usage/examples' },
+            { label: 'Nx Integration', slug: 'usage/nx-integration' },
+          ],
+        },
+        {
+          label: 'API Reference',
+          items: [
+            { label: 'generate-api executor', slug: 'reference/generate-api' },
+            { label: 'All Options', slug: 'reference/options' },
+          ],
+        },
+        {
+          label: 'Roadmap',
+          items: [{ label: 'Roadmap', slug: 'roadmap/roadmap' }],
+        },
+      ],
+    }),
+  ],
 });
