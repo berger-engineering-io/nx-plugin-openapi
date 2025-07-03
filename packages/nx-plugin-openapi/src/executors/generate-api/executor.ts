@@ -9,8 +9,8 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   options,
   context: ExecutorContext
 ) => {
+  const generatorType = 'typescript-angular';
   const {
-    generatorType = 'typescript-angular',
     skipValidateSpec = false,
     inputSpec,
     outputPath,

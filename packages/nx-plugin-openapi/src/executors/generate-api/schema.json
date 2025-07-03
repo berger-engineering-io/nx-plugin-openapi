@@ -9,11 +9,6 @@
       "type": "string",
       "description": "Path to the OpenAPI specification file"
     },
-    "generatorType": {
-      "type": "string",
-      "description": "Type of client code generator to use",
-      "default": "typescript-angular"
-    },
     "outputPath": {
       "type": "string",
       "description": "Output directory for the generated API code"
