@@ -15,22 +15,26 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
   try {
     logger.info(log('Starting to generate API from provided OpenAPI spec...'));
     logger.verbose(log(`Cleaning outputPath ${outputPath} first`));
-    
+
     // Clean the output directory before generating
     const fullOutputPath = join(context.root, outputPath);
     rmSync(fullOutputPath, { recursive: true, force: true });
 
     // Build command arguments
     const args = buildCommandArgs(options);
-    
+
     // Execute OpenAPI Generator using spawn for security
     await new Promise<void>((resolve, reject) => {
-      const child = spawn('node', ['node_modules/@openapitools/openapi-generator-cli/main.js', ...args], {
-        cwd: context.root,
-        stdio: 'inherit',
-      });
+      const childProcess = spawn(
+        'node',
+        ['node_modules/@openapitools/openapi-generator-cli/main.js', ...args],
+        {
+          cwd: context.root,
+          stdio: 'inherit',
+        }
+      );
 
-      child.on('close', (code) => {
+      childProcess.on('close', (code) => {
         if (code === 0) {
           resolve();
         } else {
@@ -38,7 +42,7 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
         }
       });
 
-      child.on('error', (error) => {
+      childProcess.on('error', (error) => {
         reject(error);
       });
     });
