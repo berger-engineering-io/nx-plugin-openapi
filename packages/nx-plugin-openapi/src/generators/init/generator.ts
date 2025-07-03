@@ -20,7 +20,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         `Could not find ${packageJsonPath}. Please run this generator in a valid Nx workspace.`
       )
     );
-    return;
+    return Promise.resolve();
   }
 
   const packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
