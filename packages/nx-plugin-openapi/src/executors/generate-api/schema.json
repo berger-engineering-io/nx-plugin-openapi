@@ -21,6 +21,129 @@
       "type": "boolean",
       "description": "Whether to skip validation of the OpenAPI specification",
       "default": false
+    },
+    "auth": {
+      "type": "string",
+      "description": "Authentication configuration"
+    },
+    "apiNameSuffix": {
+      "type": "string",
+      "description": "Suffix for API names"
+    },
+    "apiPackage": {
+      "type": "string",
+      "description": "Package name for API classes"
+    },
+    "artifactId": {
+      "type": "string",
+      "description": "Artifact ID for the generated code"
+    },
+    "artifactVersion": {
+      "type": "string",
+      "description": "Version of the generated artifact"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Perform a dry run without generating files",
+      "default": false
+    },
+    "enablePostProcessFile": {
+      "type": "boolean",
+      "description": "Enable post-processing of generated files",
+      "default": false
+    },
+    "gitHost": {
+      "type": "string",
+      "description": "Git host for the repository"
+    },
+    "gitRepoId": {
+      "type": "string",
+      "description": "Git repository ID"
+    },
+    "gitUserId": {
+      "type": "string",
+      "description": "Git user ID"
+    },
+    "globalProperties": {
+      "type": "object",
+      "description": "Global properties for code generation",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "groupId": {
+      "type": "string",
+      "description": "Group ID for the generated code"
+    },
+    "httpUserAgent": {
+      "type": "string",
+      "description": "HTTP user agent string"
+    },
+    "ignoreFileOverride": {
+      "type": "string",
+      "description": "Path to ignore file override"
+    },
+    "inputSpecRootDirectory": {
+      "type": "string",
+      "description": "Root directory for input specifications"
+    },
+    "invokerPackage": {
+      "type": "string",
+      "description": "Package name for invoker classes"
+    },
+    "logToStderr": {
+      "type": "boolean",
+      "description": "Log output to stderr",
+      "default": false
+    },
+    "minimalUpdate": {
+      "type": "boolean",
+      "description": "Perform minimal updates only",
+      "default": false
+    },
+    "modelNamePrefix": {
+      "type": "string",
+      "description": "Prefix for model names"
+    },
+    "modelNameSuffix": {
+      "type": "string",
+      "description": "Suffix for model names"
+    },
+    "modelPackage": {
+      "type": "string",
+      "description": "Package name for model classes"
+    },
+    "packageName": {
+      "type": "string",
+      "description": "Package name for the generated code"
+    },
+    "releaseNote": {
+      "type": "string",
+      "description": "Release notes for the generated code"
+    },
+    "removeOperationIdPrefix": {
+      "type": "boolean",
+      "description": "Remove operation ID prefix",
+      "default": false
+    },
+    "skipOverwrite": {
+      "type": "boolean",
+      "description": "Skip overwriting existing files",
+      "default": false
+    },
+    "skipOperationExample": {
+      "type": "boolean",
+      "description": "Skip generating operation examples",
+      "default": false
+    },
+    "strictSpec": {
+      "type": "boolean",
+      "description": "Use strict specification validation",
+      "default": false
+    },
+    "templateDirectory": {
+      "type": "string",
+      "description": "Directory containing custom templates"
     }
   },
   "required": [
