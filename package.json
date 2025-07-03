@@ -2,7 +2,9 @@
   "name": "@nx-plugin-openapi/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "build:docs": "cd apps/docs && npm run build"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "~18.2.0",
