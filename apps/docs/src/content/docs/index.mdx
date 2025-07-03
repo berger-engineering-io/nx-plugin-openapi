@@ -1,36 +1,70 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
+title: Nx Plugin OpenAPI
+description: Nx Plugin for seamless integration of OpenAPI Generator Angular client
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Seamless Nx integration of OpenAPI generator. Generate Angular API clients from OpenAPI specifications with ease!
   image:
     file: ../../assets/houston.webp
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get Started
+      link: /getting-started/overview/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: View on GitHub
+      link: https://github.com/lambda-solutions/nx-plugin-openapi
       icon: external
       variant: minimal
 ---
 
+
+
+
+
+
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## Why Nx Plugin OpenAPI?
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="🚀 Easy Integration" icon="rocket">
+		Seamlessly integrates with your Nx workspace using familiar executors and configurations.
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="⚡ Powerful Caching" icon="lightning">
+		Leverages Nx's intelligent caching to avoid regenerating unchanged API clients.
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="🔧 Flexible Configuration" icon="setting">
+		Supports all OpenAPI Generator options with TypeScript-safe configuration.
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="📦 TypeScript-Angular Ready" icon="puzzle">
+		Generates Angular-compatible TypeScript clients out of the box using the well established <a href="https://openapi-generator.tech/docs/generators/typescript-angular">OpenAPI Generator for Angular.</a>
 	</Card>
 </CardGrid>
+
+## Features
+
+- **🎯 Executor-based**: Use `nx run my-app:generate-api` to generate API clients
+- **📁 File & URL Support**: Work with local OpenAPI specs or remote URLs
+- **⚙️ Extensive Configuration**: Support for 30+ OpenAPI Generator options
+- **🔄 Smart Caching**: Only regenerates when OpenAPI specs change
+
+## Quick Example
+
+```json
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": "apps/my-app/swagger.json",
+        "outputPath": "libs/api-client/src"
+      }
+    }
+  }
+}
+```
+
+```bash
+nx run my-app:generate-api
+```
+
+Ready to get started? Check out our [installation guide](/getting-started/installation/) or explore the [examples](/usage/examples/).
