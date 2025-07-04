@@ -4,7 +4,7 @@ Nx Plugin for seamless Nx integration of [OpenApi Generator](https://openapi-gen
 ## Features
 * Executor for generating Angular API clients from OpenAPI specifications
 
-![Setup]("../../apps/docs/public/nx-plugin-openapi-setup.gif")
+![Setup](../../apps/docs/public/nx-plugin-openapi-setup.gif)
 
 ## Installation
 
