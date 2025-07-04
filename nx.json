@@ -64,7 +64,7 @@
     }
   },
   "release": {
-    "projects": ["packages/*"],
+    "projects": ["packages/*", "!packages/*-e2e"],
     "projectsRelationship": "independent",
     "releaseTagPattern": "release/{projectName}/{version}",
     "changelog": {
