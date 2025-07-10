@@ -89,8 +89,8 @@ You can also manually add the executor configuration to your `project.json` file
     "generate-api": {
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "options": {
-        "inputSpec": "apps/my-app/swagger.json",
-        "outputPath": "libs/api-client/src"
+        "inputSpec": "apps/my-app/api.json",
+        "outputPath": "apps/my-app/src/app/api"
       },
       "outputs": ["{options.outputPath}"]
     },
