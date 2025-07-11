@@ -20,7 +20,7 @@ Generate an API client from a local OpenAPI specification file:
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
-        "outputPath": "libs/api-client/src"
+        "outputPath": "apps/demo/src/app/api"
       },
       "outputs": ["{options.outputPath}"]
     }
@@ -39,7 +39,7 @@ Generate from a remote URL:
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "options": {
         "inputSpec": "https://api.example.com/swagger.json",
-        "outputPath": "libs/api-client/src"
+        "outputPath": "apps/demo/src/app/api"
       }
     }
   }
@@ -77,27 +77,8 @@ Use a separate configuration file for detailed OpenAPI Generator options:
       "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
       "options": {
         "inputSpec": "apps/demo/openapi.json",
-        "outputPath": "libs/api-client/src",
+        "outputPath": "apps/demo/src/app/api"
         "configFile": "apps/demo/openapi-config.json"
-      }
-    }
-  }
-}
-```
-
-### Skip Validation for Faster Generation
-
-When you're confident your OpenAPI spec is valid, skip validation for faster generation:
-
-```json title="project.json"
-{
-  "targets": {
-    "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
-      "options": {
-        "inputSpec": "apps/demo/swagger.json",
-        "outputPath": "libs/api-client/src",
-        "skipValidateSpec": true
       }
     }
   }
@@ -333,61 +314,6 @@ Configure API generation at the workspace level in `nx.json`:
     }
   }
 }
-```
-
-## CI/CD Examples
-
-### GitHub Actions
-
-```yaml title=".github/workflows/ci.yml"
-name: CI
-
-on: [push, pull_request]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - run: npm ci
-      
-      # Generate API clients
-      - name: Generate API Clients
-        run: nx run-many --target=generate-api --all
-      
-      # Build all projects
-      - name: Build
-        run: nx run-many --target=build --all
-      
-      # Run tests
-      - name: Test
-        run: nx run-many --target=test --all
-```
-
-### Docker
-
-```dockerfile title="Dockerfile"
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-
-# Generate API clients
-RUN nx run-many --target=generate-api --all
-
-# Build the application
-RUN nx build my-app --prod
-
-FROM nginx:alpine
-COPY --from=builder /app/dist/apps/my-app /usr/share/nginx/html
 ```
 
 ## Troubleshooting Examples
