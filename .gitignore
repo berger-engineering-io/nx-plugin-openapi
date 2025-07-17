@@ -43,3 +43,6 @@ Thumbs.db
 
 .angular
 /.nx-plugin-openapi/
+/.claude/
+/.ai/
+/.scratchpads/
