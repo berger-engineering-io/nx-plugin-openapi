@@ -1,4 +1,5 @@
 const nx = require('@nx/eslint-plugin');
+const { negatePatterns } = require('./tools/eslint/negate-patterns');
 
 module.exports = [
   {
@@ -35,7 +36,7 @@ module.exports = [
   },
   {
     files: ['**/*.spec.ts'],
-    ignores: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    ignores: negatePatterns(['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']),
     // Override or add rules here
     rules: {
       '@typescript-eslint/no-empty-function': 'off',
