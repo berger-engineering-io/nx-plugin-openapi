@@ -36,11 +36,13 @@ jobs:
       - run: npx nx affected -t lint
       - run: npx nx affected -t test
       - run: npx nx affected -t build
-      - name: Cache documentation dependencies
+      - name: Cache docs dependencies
         uses: actions/cache@v3
         with:
-          path: .docs
-          key: ${{ runner.os }}-docs-${{ hashFiles('**/package-lock.json') }}
+          path: apps/docs/node_modules
+          key: ${{ runner.os }}-docs-deps-${{ hashFiles('apps/docs/package.json', 'apps/docs/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-docs-
+            ${{ runner.os }}-docs-deps-
+      - name: Install docs dependencies
+        run: cd apps/docs && npm install
       - run: npm run build:docs
