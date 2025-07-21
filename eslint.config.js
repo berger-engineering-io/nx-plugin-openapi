@@ -3,6 +3,7 @@ const nx = require('@nx/eslint-plugin');
 module.exports = [
   {
     files: ['**/*.json'],
+    ignores: ['**/project.json', '**/tsconfig.*.json', '**/tsconfig.json'],
     // Override or add rules here
     rules: {},
     languageOptions: { parser: require('jsonc-eslint-parser') },
@@ -33,8 +34,12 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ['**/*.spec.ts'],
+    ignores: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     // Override or add rules here
-    rules: {},
+    rules: {
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+    },
   },
 ];
