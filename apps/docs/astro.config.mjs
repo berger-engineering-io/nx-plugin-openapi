@@ -13,7 +13,7 @@ export default defineConfig({
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/lambda-solutions/nx-plugin-openapi',
+          href: 'https://github.com/berger-engineering-io/nx-plugin-openapi',
         },
       ],
       sidebar: [
