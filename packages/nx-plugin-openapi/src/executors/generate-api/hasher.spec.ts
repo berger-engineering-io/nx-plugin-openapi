@@ -225,6 +225,140 @@ describe('generateApiHasher', () => {
     });
   });
 
+  describe('multiple inputSpec support', () => {
+    it('should hash multiple local files when inputSpec is an object', async () => {
+      const task = createMockTask();
+      const context = createMockContext({
+        inputSpec: {
+          'user-service': 'apis/user-service.json',
+          'product-service': 'apis/product-service.json',
+        },
+        outputPath: 'libs/api',
+      });
+      
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockImplementation((path) => {
+        if (path.includes('user-service')) return 'user api content';
+        if (path.includes('product-service')) return 'product api content';
+        return '';
+      });
+
+      const result = await correctgenerateApiHasher(task, context);
+
+      expect(mockExistsSync).toHaveBeenCalledWith('/test/workspace/apis/user-service.json');
+      expect(mockExistsSync).toHaveBeenCalledWith('/test/workspace/apis/product-service.json');
+      expect(mockReadFileSync).toHaveBeenCalledWith('/test/workspace/apis/user-service.json', { encoding: 'utf8' });
+      expect(mockReadFileSync).toHaveBeenCalledWith('/test/workspace/apis/product-service.json', { encoding: 'utf8' });
+      
+      // The hash should include all service names and file paths
+      expect(result.value).toContain('base-hash');
+      expect(result.value).toContain('user-service');
+      expect(result.value).toContain('product-service');
+      expect(mockLogger.verbose).toHaveBeenCalledWith('[test] Multiple inputSpec detected.');
+    });
+
+    it('should hash multiple remote URLs when inputSpec is an object', async () => {
+      const task = createMockTask();
+      const context = createMockContext({
+        inputSpec: {
+          'auth-api': 'https://api.example.com/auth/openapi.json',
+          'payment-api': 'https://api.example.com/payment/openapi.json',
+        },
+        outputPath: 'libs/api',
+      });
+      
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('auth')) {
+          return Promise.resolve({
+            ok: true,
+            text: jest.fn().mockResolvedValue('auth api content'),
+          });
+        }
+        if (url.includes('payment')) {
+          return Promise.resolve({
+            ok: true,
+            text: jest.fn().mockResolvedValue('payment api content'),
+          });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
+      const result = await correctgenerateApiHasher(task, context);
+
+      expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/auth/openapi.json');
+      expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/payment/openapi.json');
+      expect(result.value).toContain('auth-api');
+      expect(result.value).toContain('payment-api');
+    });
+
+    it('should handle mixed local and remote specs', async () => {
+      const task = createMockTask();
+      const context = createMockContext({
+        inputSpec: {
+          'local-service': 'apis/local.json',
+          'remote-service': 'https://api.example.com/remote.json',
+        },
+        outputPath: 'libs/api',
+      });
+      
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue('local api content');
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: jest.fn().mockResolvedValue('remote api content'),
+      });
+
+      const result = await correctgenerateApiHasher(task, context);
+
+      expect(mockExistsSync).toHaveBeenCalledWith('/test/workspace/apis/local.json');
+      expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/remote.json');
+      expect(result.value).toContain('local-service');
+      expect(result.value).toContain('remote-service');
+    });
+
+    it('should handle empty object inputSpec', async () => {
+      const task = createMockTask();
+      const context = createMockContext({
+        inputSpec: {},
+        outputPath: 'libs/api',
+      });
+
+      const result = await correctgenerateApiHasher(task, context);
+
+      expect(result.value).toBe('base-hash');
+      expect(mockExistsSync).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('should handle fetch error for one of multiple URLs', async () => {
+      const task = createMockTask();
+      const context = createMockContext({
+        inputSpec: {
+          'service1': 'https://api.example.com/service1.json',
+          'service2': 'https://api.example.com/service2.json',
+        },
+        outputPath: 'libs/api',
+      });
+      
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('service1')) {
+          return Promise.resolve({
+            ok: true,
+            text: jest.fn().mockResolvedValue('service1 content'),
+          });
+        }
+        return Promise.resolve({
+          ok: false,
+          statusText: 'Service Unavailable',
+        });
+      });
+
+      await expect(correctgenerateApiHasher(task, context)).rejects.toThrow(
+        'Failed to fetch remote OpenAPI spec for service2: Service Unavailable'
+      );
+    });
+  });
+
   describe('error handling', () => {
     it('should throw error when executor options are invalid', async () => {
       const task = createMockTask();

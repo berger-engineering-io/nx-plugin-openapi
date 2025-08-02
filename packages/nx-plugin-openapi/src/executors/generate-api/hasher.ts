@@ -12,7 +12,7 @@ import { createHash } from 'crypto';
 import { log } from '../../generators/utils/log';
 
 const GenerateApiExecutorSchema = z.object({
-  inputSpec: z.string(),
+  inputSpec: z.union([z.string(), z.record(z.string())]),
   generatorType: z.string().optional(),
   outputPath: z.string(),
   configFile: z.string().optional(),
@@ -50,28 +50,71 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     );
   }
   const targetProjectOptions = targetProjectOptionsParseResult.data;
-  // Clean the output directory before generating
-  //const fullOutputPath = join(contextRoot, targetProjectOptions.outputPath);
-  //rmSync(fullOutputPath, { recursive: true, force: true });
-
-  // Check if inputSpec is url or not
-  const parseInputSpecResult = z
-    .string()
-    .url()
-    .safeParse(targetProjectOptions.inputSpec);
-
+  
   const taskHash = await context.hasher.hashTask(
     task,
     context.taskGraph,
     process.env
   );
 
+  // Handle multiple inputSpec (object)
+  if (typeof targetProjectOptions.inputSpec === 'object') {
+    logger.verbose(log('Multiple inputSpec detected.'));
+    const hashes: string[] = [taskHash.value];
+    
+    for (const [serviceName, specPath] of Object.entries(targetProjectOptions.inputSpec)) {
+      hashes.push(serviceName);
+      
+      // Check if it's a URL
+      const isUrl = z.string().url().safeParse(specPath).success;
+      
+      if (isUrl) {
+        logger.verbose(log(`Fetching remote OpenAPI spec for ${serviceName}...`));
+        const response = await fetch(specPath);
+        
+        if (!response.ok) {
+          logger.error(
+            log(`Failed to fetch remote OpenAPI spec for ${serviceName}: ${response.statusText}`)
+          );
+          return Promise.reject(
+            new Error(`Failed to fetch remote OpenAPI spec for ${serviceName}: ${response.statusText}`)
+          );
+        }
+        
+        const content = await response.text();
+        hashes.push(specPath, hashFileContent(content));
+      } else {
+        // Local file
+        const inputSpecPath = join(contextRoot, specPath);
+        if (existsSync(inputSpecPath)) {
+          const fileContent = readFileSync(inputSpecPath, { encoding: 'utf8' });
+          hashes.push(inputSpecPath, hashFileContent(fileContent));
+        }
+      }
+    }
+    
+    const hash: Hash = {
+      value: hashArray(hashes),
+      details: {
+        command: taskHash.details.command,
+        nodes: taskHash.details.nodes,
+        implicitDeps: taskHash.details.implicitDeps,
+        runtime: taskHash.details.runtime,
+      },
+    };
+    return Promise.resolve(hash);
+  }
+
+  // Handle single inputSpec (string)
+  const inputSpec = targetProjectOptions.inputSpec as string;
+  
+  // Check if inputSpec is url or not
+  const parseInputSpecResult = z.string().url().safeParse(inputSpec);
+
   // Case local file
-  // read content and create hash for it
-  // nx hasher: fileContent and file name
   if (!parseInputSpecResult.success) {
     logger.verbose(log('Local file detected for inputSpec.'));
-    const inputSpecPath = join(contextRoot, targetProjectOptions.inputSpec);
+    const inputSpecPath = join(contextRoot, inputSpec);
     if (existsSync(inputSpecPath)) {
       const fileContent = readFileSync(inputSpecPath, { encoding: 'utf8' });
       const fileHash = hashFileContent(fileContent);
@@ -89,16 +132,12 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     }
   }
 
-  // case URl
-  // fetch content and hash it
-  // nx hasher: content and url
+  // case URL
   if (parseInputSpecResult.success) {
     logger.verbose(log('Remote URL detected for inputSpec.'));
 
-    const inputSpecUrl = targetProjectOptions.inputSpec;
-
     logger.verbose(log(`Fetching remote OpenAPI spec...`));
-    const response = await fetch(inputSpecUrl);
+    const response = await fetch(inputSpec);
 
     if (!response.ok) {
       logger.error(
@@ -117,7 +156,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     const fileHash = hashFileContent(content);
 
     const hash: Hash = {
-      value: hashArray([taskHash.value, inputSpecUrl, fileHash]),
+      value: hashArray([taskHash.value, inputSpec, fileHash]),
       details: {
         command: taskHash.details.command,
         nodes: taskHash.details.nodes,
@@ -128,7 +167,7 @@ export const correctgenerateApiHasher: CustomHasher = async (task, context) => {
     return Promise.resolve(hash);
   }
 
-  // optional for both cases - store stuff in .nx-openapi-plugin folder?
+  // fallback
   return await context.hasher.hashTask(task, context.taskGraph, process.env);
 };
 
