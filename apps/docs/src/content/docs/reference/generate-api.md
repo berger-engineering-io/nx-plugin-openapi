@@ -33,16 +33,18 @@ nx run <project>:generate-api
 
 ### `inputSpec`
 
-- **Type:** `string`
+- **Type:** `string | Record<string, string>`
 - **Required:** Yes
-- **Description:** Path to the OpenAPI specification file or URL
+- **Description:** Path to the OpenAPI specification file(s) or URL(s)
 
 The input specification can be:
-- A local file path (JSON or YAML)
-- A remote URL
-- Relative paths are resolved from the workspace root
+- A single string: Path to one OpenAPI specification (backward compatible)
+- An object: Multiple specifications mapped by service name (for microservices)
 
-**Examples:**
+#### Single Specification (String)
+
+For projects with a single API:
+
 ```json
 {
   "inputSpec": "apps/my-app/swagger.json"
@@ -53,6 +55,36 @@ The input specification can be:
 {
   "inputSpec": "https://api.example.com/swagger.json"
 }
+```
+
+#### Multiple Specifications (Object)
+
+For microservice architectures with multiple APIs:
+
+```json
+{
+  "inputSpec": {
+    "ms-product": "apps/my-app/ms-product.json",
+    "ms-user": "apps/my-app/ms-user.json",
+    "ms-inventory": "apps/my-app/ms-inventory.json"
+  }
+}
+```
+
+When using multiple specifications:
+- Each key becomes a subdirectory name under `outputPath`
+- Each API is generated in its own subdirectory
+- All configured options are applied to each generation
+
+**Generated structure for multiple specs:**
+```
+libs/api/src/
+  ms-product/
+    // generated API for product service
+  ms-user/
+    // generated API for user service
+  ms-inventory/
+    // generated API for inventory service
 ```
 
 ### `outputPath`
@@ -529,6 +561,51 @@ Here's a comprehensive example showing many options:
     }
   }
 }
+```
+
+### Multiple APIs Example
+
+For microservice architectures:
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": {
+          "auth-service": "apis/auth-service.yaml",
+          "product-service": "apis/product-service.yaml",
+          "order-service": "apis/order-service.yaml",
+          "payment-service": "apis/payment-service.yaml"
+        },
+        "outputPath": "libs/api-clients/src",
+        "packageName": "@my-org/api-clients",
+        "apiNameSuffix": "ApiService",
+        "modelNamePrefix": "Api",
+        "globalProperties": {
+          "supportsES6": "true",
+          "providedInRoot": "true",
+          "withInterfaces": "true"
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    }
+  }
+}
+```
+
+This will generate:
+```
+libs/api-clients/src/
+  auth-service/
+    // Auth API client
+  product-service/
+    // Product API client
+  order-service/
+    // Order API client
+  payment-service/
+    // Payment API client
 ```
 
 ## Environment-Specific Configuration
