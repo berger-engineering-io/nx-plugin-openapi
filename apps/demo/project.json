@@ -15,6 +15,18 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "generate-api-multiple": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": {
+          "user-service": "apps/demo/apis/user-service.json",
+          "product-service": "apps/demo/apis/product-service.json"
+        },
+        "outputPath": "apps/demo/src/app/api-services",
+        "skipValidateSpec": true
+      },
+      "outputs": ["{options.outputPath}"]
+    },
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
