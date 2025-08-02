@@ -418,4 +418,188 @@ describe('GenerateApi Executor', () => {
       expect(spawnArgs).not.toContain('--global-property');
     });
   });
+
+  describe('multiple inputSpec support', () => {
+    it('should generate multiple APIs when inputSpec is an object', async () => {
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: {
+          'ms-product': 'apps/my-app/ms-product.json',
+          'ms-user': 'apps/my-app/ms-user.json',
+          'ms-inventory': 'apps/my-app/ms-inventory.json',
+        },
+        outputPath: 'libs/api/src',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(true);
+      
+      // Should clean each service directory
+      expect(mockRmSync).toHaveBeenCalledTimes(3);
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/test/workspace/libs/api/src/ms-product',
+        { recursive: true, force: true }
+      );
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/test/workspace/libs/api/src/ms-user',
+        { recursive: true, force: true }
+      );
+      expect(mockRmSync).toHaveBeenCalledWith(
+        '/test/workspace/libs/api/src/ms-inventory',
+        { recursive: true, force: true }
+      );
+
+      // Should spawn OpenAPI generator for each service
+      expect(mockSpawn).toHaveBeenCalledTimes(3);
+      
+      // Check first service call
+      expect(mockSpawn).toHaveBeenNthCalledWith(1,
+        'node',
+        [
+          'node_modules/@openapitools/openapi-generator-cli/main.js',
+          'generate',
+          '-i', 'apps/my-app/ms-product.json',
+          '-g', 'typescript-angular',
+          '-o', 'libs/api/src/ms-product'
+        ],
+        {
+          stdio: 'inherit',
+          cwd: '/test/workspace',
+        }
+      );
+
+      // Check second service call
+      expect(mockSpawn).toHaveBeenNthCalledWith(2,
+        'node',
+        [
+          'node_modules/@openapitools/openapi-generator-cli/main.js',
+          'generate',
+          '-i', 'apps/my-app/ms-user.json',
+          '-g', 'typescript-angular',
+          '-o', 'libs/api/src/ms-user'
+        ],
+        {
+          stdio: 'inherit',
+          cwd: '/test/workspace',
+        }
+      );
+
+      // Check logging
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] Starting to generate APIs from multiple OpenAPI specs...'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] Generating API for ms-product...'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] API generation for ms-product completed successfully.'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] All API generations completed successfully.'
+      );
+    });
+
+    it('should handle single service in object format', async () => {
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: {
+          'my-service': 'path/to/spec.json',
+        },
+        outputPath: 'libs/api',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(true);
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'node',
+        [
+          'node_modules/@openapitools/openapi-generator-cli/main.js',
+          'generate',
+          '-i', 'path/to/spec.json',
+          '-g', 'typescript-angular',
+          '-o', 'libs/api/my-service'
+        ],
+        {
+          stdio: 'inherit',
+          cwd: '/test/workspace',
+        }
+      );
+    });
+
+    it('should fail if one service generation fails', async () => {
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: {
+          'ms-product': 'apps/my-app/ms-product.json',
+          'ms-user': 'apps/my-app/ms-user.json',
+        },
+        outputPath: 'libs/api/src',
+      };
+
+      let callCount = 0;
+      mockChildProcess.on.mockImplementation((event: string, callback: Function) => {
+        if (event === 'close') {
+          callCount++;
+          // Make the second service fail
+          setTimeout(() => callback(callCount === 2 ? 1 : 0), 0);
+        }
+        return mockChildProcess;
+      });
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[test] API generation failed with error'
+      );
+    });
+
+    it('should handle empty object inputSpec', async () => {
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: {},
+        outputPath: 'libs/api',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(true);
+      expect(mockSpawn).not.toHaveBeenCalled();
+      expect(mockRmSync).not.toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[test] All API generations completed successfully.'
+      );
+    });
+
+    it('should pass additional options to each service generation', async () => {
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: {
+          'service-a': 'spec-a.json',
+          'service-b': 'spec-b.json',
+        },
+        outputPath: 'libs/api',
+        skipValidateSpec: true,
+        packageName: 'com.example.api',
+        globalProperties: {
+          supportsES6: 'true',
+        },
+      };
+
+      await executor(options, baseContext);
+
+      // Check that additional options are passed to both services
+      const firstCallArgs = mockSpawn.mock.calls[0][1];
+      expect(firstCallArgs).toContain('--skip-validate-spec');
+      expect(firstCallArgs).toContain('--package-name');
+      expect(firstCallArgs).toContain('com.example.api');
+      expect(firstCallArgs).toContain('--global-property');
+      expect(firstCallArgs).toContain('supportsES6=true');
+
+      const secondCallArgs = mockSpawn.mock.calls[1][1];
+      expect(secondCallArgs).toContain('--skip-validate-spec');
+      expect(secondCallArgs).toContain('--package-name');
+      expect(secondCallArgs).toContain('com.example.api');
+      expect(secondCallArgs).toContain('--global-property');
+      expect(secondCallArgs).toContain('supportsES6=true');
+    });
+  });
 });
