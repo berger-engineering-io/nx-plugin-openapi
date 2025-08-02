@@ -238,8 +238,9 @@ describe('generateApiHasher', () => {
       
       mockExistsSync.mockReturnValue(true);
       mockReadFileSync.mockImplementation((path) => {
-        if (path.includes('user-service')) return 'user api content';
-        if (path.includes('product-service')) return 'product api content';
+        const pathStr = String(path);
+        if (pathStr.includes('user-service')) return 'user api content';
+        if (pathStr.includes('product-service')) return 'product api content';
         return '';
       });
 
@@ -268,13 +269,14 @@ describe('generateApiHasher', () => {
       });
       
       mockFetch.mockImplementation((url) => {
-        if (url.includes('auth')) {
+        const urlStr = String(url);
+        if (urlStr.includes('auth')) {
           return Promise.resolve({
             ok: true,
             text: jest.fn().mockResolvedValue('auth api content'),
           });
         }
-        if (url.includes('payment')) {
+        if (urlStr.includes('payment')) {
           return Promise.resolve({
             ok: true,
             text: jest.fn().mockResolvedValue('payment api content'),
@@ -341,7 +343,8 @@ describe('generateApiHasher', () => {
       });
       
       mockFetch.mockImplementation((url) => {
-        if (url.includes('service1')) {
+        const urlStr = String(url);
+        if (urlStr.includes('service1')) {
           return Promise.resolve({
             ok: true,
             text: jest.fn().mockResolvedValue('service1 content'),
