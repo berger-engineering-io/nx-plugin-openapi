@@ -45,7 +45,7 @@ export function buildCommandArgs(options: GenerateApiExecutorSchema): string[] {
 
   // Add base command arguments
   args.push('generate');
-  args.push('-i', options.inputSpec);
+  args.push('-i', options.inputSpec as string); // Type assertion since we always pass string from executor
   args.push('-g', 'typescript-angular');
   args.push('-o', options.outputPath);
 

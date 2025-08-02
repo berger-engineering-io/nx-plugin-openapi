@@ -6,8 +6,20 @@
   "type": "object",
   "properties": {
     "inputSpec": {
-      "type": "string",
-      "description": "Path to the OpenAPI specification file"
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to the OpenAPI specification file"
+        },
+        {
+          "type": "object",
+          "description": "Multiple OpenAPI specification files mapped by service name",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Path to the OpenAPI specification file(s). Can be a single path or an object mapping service names to paths"
     },
     "outputPath": {
       "type": "string",

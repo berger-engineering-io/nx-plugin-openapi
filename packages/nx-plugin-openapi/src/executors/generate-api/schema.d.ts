@@ -1,5 +1,5 @@
 export interface GenerateApiExecutorSchema {
-  inputSpec: string;
+  inputSpec: string | Record<string, string>;
   outputPath: string;
   configFile?: string;
   skipValidateSpec?: boolean;
