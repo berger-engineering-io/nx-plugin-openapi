@@ -6,4 +6,5 @@ export interface AddGenerateApiSchema {
   configFile?: string;
   skipValidateSpec?: boolean;
   addToGitignore?: boolean;
+  targetName?: string;
 }
