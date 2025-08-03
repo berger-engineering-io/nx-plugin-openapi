@@ -5,6 +5,7 @@ import {
   logger,
   readProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { addGenerateApiGenerator } from './generator';
 import { AddGenerateApiSchema } from './schema';
@@ -205,5 +206,109 @@ describe('add-generate-api-target generator', () => {
     expect(mockedLogger.info).toHaveBeenCalledWith(
       '[@lambda-solutions/nx-plugin-openapi] ✨ Successfully added generate-api target to test-app project'
     );
+  });
+
+  describe('custom target name', () => {
+    it('should use custom target name when provided', async () => {
+      const options: AddGenerateApiSchema = {
+        project: 'test-app',
+        inputSpec: 'swagger.json',
+        outputPath: 'libs/api',
+        targetName: 'generate-client',
+      };
+
+      await addGenerateApiGenerator(tree, options);
+
+      const projectConfig = readProjectConfiguration(tree, 'test-app');
+      const target = projectConfig.targets['generate-client'];
+
+      expect(target).toBeDefined();
+      expect(projectConfig.targets['generate-api']).toBeUndefined();
+      expect(target.executor).toBe(
+        '@lambda-solutions/nx-plugin-openapi:generate-api'
+      );
+    });
+
+    it('should add custom target to build dependsOn', async () => {
+      // Add build target
+      const projectConfig = readProjectConfiguration(tree, 'test-app');
+      projectConfig.targets['build'] = {
+        executor: '@nx/webpack:build',
+        options: {},
+      };
+      updateProjectConfiguration(tree, 'test-app', projectConfig);
+
+      const options: AddGenerateApiSchema = {
+        project: 'test-app',
+        inputSpec: 'swagger.json',
+        outputPath: 'libs/api',
+        targetName: 'generate-client',
+      };
+
+      await addGenerateApiGenerator(tree, options);
+
+      const updatedConfig = readProjectConfiguration(tree, 'test-app');
+      expect(updatedConfig.targets['build'].dependsOn).toContain('generate-client');
+    });
+
+    it('should add default target name to build dependsOn when no custom name', async () => {
+      // Add build target
+      const projectConfig = readProjectConfiguration(tree, 'test-app');
+      projectConfig.targets['build'] = {
+        executor: '@nx/webpack:build',
+        options: {},
+      };
+      updateProjectConfiguration(tree, 'test-app', projectConfig);
+
+      const options: AddGenerateApiSchema = {
+        project: 'test-app',
+        inputSpec: 'swagger.json',
+        outputPath: 'libs/api',
+      };
+
+      await addGenerateApiGenerator(tree, options);
+
+      const updatedConfig = readProjectConfiguration(tree, 'test-app');
+      expect(updatedConfig.targets['build'].dependsOn).toContain('generate-api');
+    });
+
+    it('should not duplicate target in build dependsOn', async () => {
+      // Add build target with existing dependsOn
+      const projectConfig = readProjectConfiguration(tree, 'test-app');
+      projectConfig.targets['build'] = {
+        executor: '@nx/webpack:build',
+        options: {},
+        dependsOn: ['generate-client'],
+      };
+      updateProjectConfiguration(tree, 'test-app', projectConfig);
+
+      const options: AddGenerateApiSchema = {
+        project: 'test-app',
+        inputSpec: 'swagger.json',
+        outputPath: 'libs/api',
+        targetName: 'generate-client',
+      };
+
+      await addGenerateApiGenerator(tree, options);
+
+      const updatedConfig = readProjectConfiguration(tree, 'test-app');
+      expect(updatedConfig.targets['build'].dependsOn).toEqual(['generate-client']);
+      expect(updatedConfig.targets['build'].dependsOn.length).toBe(1);
+    });
+
+    it('should log correct success message with custom target name', async () => {
+      const options: AddGenerateApiSchema = {
+        project: 'test-app',
+        inputSpec: 'swagger.json',
+        outputPath: 'libs/api',
+        targetName: 'my-custom-api',
+      };
+
+      await addGenerateApiGenerator(tree, options);
+
+      expect(mockedLogger.info).toHaveBeenCalledWith(
+        '[@lambda-solutions/nx-plugin-openapi] ✨ Successfully added my-custom-api target to test-app project'
+      );
+    });
   });
 });

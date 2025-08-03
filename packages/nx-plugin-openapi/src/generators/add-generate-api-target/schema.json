@@ -36,6 +36,12 @@
       "description": "Whether to add the output path to .gitignore",
       "default": true,
       "x-prompt": "Would you like to add the output path to .gitignore?"
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Custom name for the generate-api target",
+      "default": "generate-api",
+      "x-prompt": "What name would you like to use for the target? (default: generate-api)"
     }
   },
   "required": ["project", "inputSpec", "outputPath"]
