@@ -5,39 +5,31 @@ import {
   TargetConfiguration,
   logger,
 } from '@nx/devkit';
-import { dirname, join, relative } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 
 export interface OpenApiPluginOptions {
   targetName?: string;
   specFilePatterns?: string[];
   outputPathPattern?: string;
-  generatorDefaults?: Record<string, any>;
+  generatorDefaults?: Record<string, unknown>;
 }
 
-const defaultSpecFilePatterns = [
-  '**/*.openapi.json',
-  '**/*.openapi.yaml',
-  '**/*.openapi.yml',
-  '**/openapi.json',
-  '**/openapi.yaml',
-  '**/openapi.yml',
-];
+// File patterns for detecting OpenAPI specification files
+
+const openApiConfigGlob = '**/*{openapi,.openapi}.{json,yaml,yml}';
 
 export const createNodesV2: CreateNodesV2<OpenApiPluginOptions> = [
-  (configFiles, options, context) => {
-    const specFilePatterns = options?.specFilePatterns || defaultSpecFilePatterns;
-    return createNodesFromFiles(
+  openApiConfigGlob,
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
       (configFile, options, context) => {
         return createNodesInternal(configFile, options, context);
       },
-      specFilePatterns,
+      configFiles,
       options,
       context
     );
-  },
-  {
-    projectFilePatterns: defaultSpecFilePatterns,
   },
 ];
 
@@ -97,18 +89,16 @@ function isOpenApiSpec(filePath: string): boolean {
     const content = readFileSync(filePath, 'utf-8');
     
     // Try to parse as JSON first
-    let spec: any;
     if (filePath.endsWith('.json')) {
-      spec = JSON.parse(content);
+      const spec = JSON.parse(content) as { openapi?: string; swagger?: string };
+      // Check for OpenAPI 3.x or Swagger 2.0
+      return !!(spec.openapi?.startsWith('3.') || spec.swagger === '2.0');
     } else {
       // For YAML files, we'll do a simple check for now
       // In a real implementation, you'd use a YAML parser
       return content.includes('openapi:') || content.includes('swagger:');
     }
-
-    // Check for OpenAPI 3.x or Swagger 2.0
-    return !!(spec.openapi?.startsWith('3.') || spec.swagger === '2.0');
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -133,4 +123,10 @@ function extractServiceName(specFile: string): string {
 /**
  * @deprecated Use createNodesV2 instead
  */
-export const createNodes = createNodesV2[0];
+export const createNodes = [
+  openApiConfigGlob,
+  (configFile: string, options: OpenApiPluginOptions | undefined, context: CreateNodesContext) => {
+    logger.warn('`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.');
+    return createNodesInternal(configFile, options, context);
+  },
+];
