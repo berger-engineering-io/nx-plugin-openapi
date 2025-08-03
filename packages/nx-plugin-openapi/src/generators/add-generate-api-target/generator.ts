@@ -15,7 +15,7 @@ export async function addGenerateApiGenerator(
   tree: Tree,
   options: AddGenerateApiSchema
 ) {
-  const targetName = 'generate-api';
+  const targetName = options.targetName || 'generate-api';
 
   // Read the project configuration
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -32,6 +32,9 @@ export async function addGenerateApiGenerator(
 
   // Add the new target
   addTarget({ projectConfig, targetName, options });
+
+  // Update build target's dependsOn if it exists
+  updateBuildTargetDependsOn({ projectConfig, targetName });
 
   // Update the project configuration
   updateProjectConfiguration(tree, options.project, projectConfig);
@@ -77,4 +80,23 @@ function addTarget(args: {
       outputs: ['{options.outputPath}'],
     },
   };
+}
+
+function updateBuildTargetDependsOn(args: {
+  projectConfig: ProjectConfiguration;
+  targetName: string;
+}) {
+  const { projectConfig, targetName } = args;
+  const buildTarget = projectConfig.targets?.['build'];
+  
+  if (buildTarget) {
+    if (!buildTarget.dependsOn) {
+      buildTarget.dependsOn = [];
+    }
+    
+    // Check if the target is already in dependsOn
+    if (!buildTarget.dependsOn.includes(targetName)) {
+      buildTarget.dependsOn.push(targetName);
+    }
+  }
 }
