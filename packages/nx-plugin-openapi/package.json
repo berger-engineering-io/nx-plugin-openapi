@@ -19,12 +19,7 @@
   },
   "nx-plugin": {
     "projectFilePatterns": [
-      "**/*.openapi.json",
-      "**/*.openapi.yaml", 
-      "**/*.openapi.yml",
-      "**/openapi.json",
-      "**/openapi.yaml",
-      "**/openapi.yml"
+      "**/*{openapi,.openapi,api-spec,-spec,swagger}.{json,yaml,yml}"
     ]
   },
   "publishConfig": {

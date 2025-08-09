@@ -15,12 +15,21 @@ export interface OpenApiPluginOptions {
   generatorDefaults?: Record<string, unknown>;
 }
 
-// File patterns for detecting OpenAPI specification files
+// Default file patterns for detecting OpenAPI specification files
+const defaultSpecFilePatterns = [
+  '**/*.openapi.json',
+  '**/*.openapi.yaml', 
+  '**/*.openapi.yml',
+  '**/openapi.json',
+  '**/openapi.yaml',
+  '**/openapi.yml',
+];
 
-const openApiConfigGlob = '**/*{openapi,.openapi}.{json,yaml,yml}';
+// Default glob pattern for common OpenAPI file patterns
+const defaultOpenApiConfigGlob = '**/*{openapi,.openapi,api-spec,-spec,swagger}.{json,yaml,yml}';
 
 export const createNodesV2: CreateNodesV2<OpenApiPluginOptions> = [
-  openApiConfigGlob,
+  defaultOpenApiConfigGlob,
   async (configFiles, options, context) => {
     return await createNodesFromFiles(
       (configFile, options, context) => {
@@ -45,6 +54,27 @@ function createNodesInternal(
     return {};
   }
 
+  // Check if file matches user-specified patterns (if provided)
+  if (options?.specFilePatterns) {
+    const specFilePatterns = options.specFilePatterns;
+    const fileMatches = specFilePatterns.some(pattern => {
+      // Convert glob pattern to regex for matching
+      const regex = new RegExp(
+        '^' + pattern
+          .replace(/\./g, '\\.')
+          .replace(/\*\*/g, '.*')
+          .replace(/\*/g, '[^/]*')
+          .replace(/\{([^}]+)\}/g, '($1)')
+          .replace(/,/g, '|') + '$'
+      );
+      return regex.test(specFile);
+    });
+    
+    if (!fileMatches) {
+      return {};
+    }
+  }
+
   // Validate that this is actually an OpenAPI spec
   if (!isOpenApiSpec(join(context.workspaceRoot, specFile))) {
     return {};
@@ -65,6 +95,9 @@ function createNodesInternal(
         'default',
         '{projectRoot}/**/*.openapi.*',
         '{projectRoot}/**/openapi.*',
+        '{projectRoot}/**/*-spec.*',
+        '{projectRoot}/**/*api-spec.*',
+        '{projectRoot}/**/swagger.*',
       ],
       outputs: ['{options.outputPath}'],
       options: {
@@ -124,7 +157,7 @@ function extractServiceName(specFile: string): string {
  * @deprecated Use createNodesV2 instead
  */
 export const createNodes = [
-  openApiConfigGlob,
+  defaultOpenApiConfigGlob,
   (configFile: string, options: OpenApiPluginOptions | undefined, context: CreateNodesContext) => {
     logger.warn('`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.');
     return createNodesInternal(configFile, options, context);
