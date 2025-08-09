@@ -14,6 +14,14 @@
   "typings": "./src/index.d.ts",
   "executors": "./executors.json",
   "generators": "./generators.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "nx-plugin": {
+    "projectFilePatterns": [
+      "**/*{openapi,.openapi,api-spec,-spec,swagger}.{json,yaml,yml}"
+    ]
+  },
   "publishConfig": {
     "access": "public"
   }
