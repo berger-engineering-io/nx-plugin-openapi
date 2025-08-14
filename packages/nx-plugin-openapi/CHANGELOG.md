@@ -1,3 +1,27 @@
+## 0.3.0 (2025-08-14)
+
+
+### 🚀 Features
+
+- **generate-api:** add support for multiple inputSpec files ([8ba101a](https://github.com/berger-engineering-io/nx-plugin-openapi/commit/8ba101a))
+
+- **hasher:** add support for multiple inputSpec in hasher ([1a0f800](https://github.com/berger-engineering-io/nx-plugin-openapi/commit/1a0f800))
+
+- **add-generate-api-target:** add support for custom target name ([f2edba0](https://github.com/berger-engineering-io/nx-plugin-openapi/commit/f2edba0))
+
+
+### 🩹 Fixes
+
+- **docs:** gif not displayed correctly ([92ef9aa](https://github.com/berger-engineering-io/nx-plugin-openapi/commit/92ef9aa))
+
+- **tests:** fix TypeScript errors in hasher tests ([fb83ef8](https://github.com/berger-engineering-io/nx-plugin-openapi/commit/fb83ef8))
+
+
+### ❤️  Thank You
+
+- Mac Mini
+- Michael Be
+
 ## 0.1.0 (2025-07-04)
 
 
