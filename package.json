@@ -2,9 +2,7 @@
   "name": "@nx-plugin-openapi/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {
-    "build:docs": "cd apps/docs && npm run build"
-  },
+  "scripts": {},
   "private": true,
   "dependencies": {
     "@angular/animations": "~18.2.0",
@@ -21,6 +19,8 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~18.2.0",
+    "@astrojs/starlight": "^0.34.4",
+    "astro": "^5.6.1",
     "@angular-devkit/core": "~18.2.0",
     "@angular-devkit/schematics": "~18.2.0",
     "@angular/cli": "~18.2.0",
@@ -52,6 +52,7 @@
     "jest-preset-angular": "~14.1.0",
     "nx": "19.8.14",
     "prettier": "^2.6.2",
+    "sharp": "^0.32.5",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
