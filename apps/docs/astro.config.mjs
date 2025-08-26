@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+  outDir: '../../dist/apps/docs',
   integrations: [
     starlight({
       title: 'Nx Plugin OpenAPI',
