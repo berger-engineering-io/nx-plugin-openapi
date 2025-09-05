@@ -1,0 +1,38 @@
+{
+  "name": "nx-openapi-plugin-openapi-tools",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nx-openapi-plugin-openapi-tools/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist/{projectRoot}",
+        "currentVersionResolver": "git-tag"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nx-openapi-plugin-openapi-tools",
+        "main": "packages/nx-openapi-plugin-openapi-tools/src/index.ts",
+        "tsConfig": "packages/nx-openapi-plugin-openapi-tools/tsconfig.json",
+        "assets": [
+          "packages/nx-openapi-plugin-openapi-tools/*.md"
+        ]
+      },
+      "dependsOn": ["nx-plugin-openapi:build"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

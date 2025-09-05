@@ -243,13 +243,14 @@ export class PluginAutoInstaller {
     cwd: string
   ): Promise<{ installed: boolean; version?: string }> {
     try {
-      const [packageName, versionSpec] = dependency.includes('@', 1)
+      const [packageName] = dependency.includes('@', 1)
         ? dependency.split('@').filter(Boolean)
         : [dependency, undefined];
 
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [cwd],
       });
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const packageJson = require(packageJsonPath);
       
       return {

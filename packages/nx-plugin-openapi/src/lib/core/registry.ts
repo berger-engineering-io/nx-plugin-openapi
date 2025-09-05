@@ -9,7 +9,7 @@ import { GeneratorNotFoundError } from './errors';
 export class GeneratorRegistry {
   private static instance: GeneratorRegistry;
   private generators: Map<string, GeneratorPlugin> = new Map();
-  private defaultGeneratorName: string = 'openapi-tools';
+  private defaultGeneratorName = 'openapi-tools';
   private config: RegistryConfig = {};
 
   private constructor() {
@@ -170,7 +170,7 @@ export class GeneratorRegistry {
       for (const packageName of knownPlugins) {
         try {
           await this.loadPlugin(packageName);
-        } catch (error) {
+        } catch {
           // Plugin not installed, skip silently
           logger.verbose(`Plugin ${packageName} not found, skipping...`);
         }
@@ -194,12 +194,14 @@ export class GeneratorRegistry {
   /**
    * Load a plugin from a package
    */
-  private async loadPlugin(packageName: string, name?: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async loadPlugin(packageName: string, _name?: string): Promise<void> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pluginModule = require(packageName);
       
       // Look for default export or specific exports
-      let GeneratorClass: any;
+      let GeneratorClass: unknown;
       
       if (pluginModule.default) {
         GeneratorClass = pluginModule.default;
@@ -216,7 +218,7 @@ export class GeneratorRegistry {
       }
 
       if (GeneratorClass) {
-        const generator = new GeneratorClass();
+        const generator = new (GeneratorClass as any)();
         this.register(generator);
         logger.info(`Loaded plugin: ${generator.name} from ${packageName}`);
       } else {
@@ -271,8 +273,8 @@ export class GeneratorRegistry {
     if (generators.length > 0) {
       lines.push('  Registered generators:');
       for (const gen of generators) {
-        const available = gen.isAvailable() ? '✓' : '✗';
-        lines.push(`    - ${gen.name} (${gen.displayName}) [${available}]`);
+        // Note: isAvailable() is async, so we can't check it here synchronously
+        lines.push(`    - ${gen.name} (${gen.displayName})`);
       }
     }
     

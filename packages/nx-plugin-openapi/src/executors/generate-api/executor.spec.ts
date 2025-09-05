@@ -1,8 +1,8 @@
 import { ExecutorContext } from '@nx/devkit';
 import { GenerateApiExecutorSchema } from './schema';
+import { GeneratorPlugin, GeneratorOptions, GeneratorResult } from '../../lib/core/interfaces';
 
 // Mock external dependencies before importing the executor
-const mockSpawn = jest.fn();
 const mockRmSync = jest.fn();
 const mockJoin = jest.fn();
 
@@ -14,9 +14,39 @@ const mockLogger = {
   error: jest.fn(),
 };
 
-jest.mock('child_process', () => ({
-  spawn: mockSpawn,
-}));
+// Mock the generator registry and related classes
+const mockGeneratorPlugin: jest.Mocked<GeneratorPlugin> = {
+  name: 'openapi-tools',
+  displayName: 'OpenAPI Generator CLI',
+  description: 'Test generator',
+  packageName: '@openapitools/openapi-generator-cli',
+  minVersion: '2.0.0',
+  isAvailable: jest.fn().mockResolvedValue(true),
+  getSchema: jest.fn().mockReturnValue({ type: 'object', properties: {} }),
+  validateOptions: jest.fn().mockReturnValue({ valid: true }),
+  generate: jest.fn().mockResolvedValue({ success: true }),
+  getSupportedTypes: jest.fn().mockReturnValue(['typescript-angular']),
+  getDependencies: jest.fn().mockReturnValue(['@openapitools/openapi-generator-cli@^2.20.0']),
+};
+
+const mockRegistry = {
+  getInstance: jest.fn(),
+  register: jest.fn(),
+  has: jest.fn().mockReturnValue(true),
+  get: jest.fn().mockReturnValue(mockGeneratorPlugin),
+  getDefaultName: jest.fn().mockReturnValue('openapi-tools'),
+  setDefault: jest.fn(),
+  listNames: jest.fn().mockReturnValue(['openapi-tools']),
+};
+
+const mockPluginLoader = {
+  discoverPlugins: jest.fn().mockResolvedValue(undefined),
+  loadPlugin: jest.fn().mockResolvedValue(mockGeneratorPlugin),
+};
+
+const mockAutoInstaller = {
+  ensurePluginInstalled: jest.fn().mockResolvedValue(true),
+};
 
 jest.mock('fs', () => ({
   rmSync: mockRmSync,
@@ -32,6 +62,26 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('../../generators/utils/log', () => ({
   log: mockLog,
+}));
+
+// Mock the core abstraction classes
+jest.mock('../../lib/core/registry', () => ({
+  GeneratorRegistry: {
+    getInstance: jest.fn(() => mockRegistry),
+  },
+}));
+
+jest.mock('../../lib/core/plugin-loader', () => ({
+  PluginLoader: jest.fn().mockImplementation(() => mockPluginLoader),
+}));
+
+jest.mock('../../lib/core/auto-installer', () => ({
+  PluginAutoInstaller: jest.fn().mockImplementation(() => mockAutoInstaller),
+}));
+
+// Mock the bundled generator
+jest.mock('../../lib/bundled/openapi-tools/generator', () => ({
+  OpenAPIToolsGenerator: jest.fn().mockImplementation(() => mockGeneratorPlugin),
 }));
 
 // Import the executor after setting up mocks
@@ -59,24 +109,17 @@ describe('GenerateApi Executor', () => {
     },
   };
 
-  // Mock child process for spawn
-  const mockChildProcess = {
-    on: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockJoin.mockImplementation((...paths) => paths.join('/'));
     mockRmSync.mockImplementation(() => undefined);
     
-    // Setup default successful spawn behavior
-    mockSpawn.mockReturnValue(mockChildProcess);
-    mockChildProcess.on.mockImplementation((event: string, callback: Function) => {
-      if (event === 'close') {
-        setTimeout(() => callback(0), 0); // Success exit code
-      }
-      return mockChildProcess;
-    });
+    // Reset mock implementations
+    mockGeneratorPlugin.isAvailable.mockResolvedValue(true);
+    mockGeneratorPlugin.validateOptions.mockReturnValue({ valid: true });
+    mockGeneratorPlugin.generate.mockResolvedValue({ success: true });
+    mockRegistry.get.mockReturnValue(mockGeneratorPlugin);
+    mockRegistry.has.mockReturnValue(true);
   });
 
   describe('successful execution', () => {
@@ -96,25 +139,23 @@ describe('GenerateApi Executor', () => {
           force: true,
         }
       );
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'node', 
-        [
-          'node_modules/@openapitools/openapi-generator-cli/main.js',
-          'generate',
-          '-i', 'openapi.json',
-          '-g', 'typescript-angular',
-          '-o', 'libs/api-client'
-        ],
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
+      
+      // Verify generator plugin interactions
+      expect(mockRegistry.get).toHaveBeenCalledWith('openapi-tools');
+      expect(mockGeneratorPlugin.isAvailable).toHaveBeenCalled();
+      expect(mockGeneratorPlugin.validateOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'openapi.json',
+          outputPath: 'libs/api-client',
+          context: baseContext,
+        })
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] Starting to generate API from provided OpenAPI spec...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] API generation completed successfully.'
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'openapi.json',
+          outputPath: 'libs/api-client',
+          context: baseContext,
+        })
       );
     });
 
@@ -122,6 +163,8 @@ describe('GenerateApi Executor', () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: 'swagger.yaml',
         outputPath: 'libs/generated-api',
+        generatorType: 'typescript-axios',
+        generator: 'openapi-tools',
         configFile: 'openapi-config.json',
         skipValidateSpec: true,
       };
@@ -129,305 +172,74 @@ describe('GenerateApi Executor', () => {
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(true);
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'node',
-        [
-          'node_modules/@openapitools/openapi-generator-cli/main.js',
-          'generate',
-          '-i', 'swagger.yaml',
-          '-g', 'typescript-angular', 
-          '-o', 'libs/generated-api',
-          '-c', 'openapi-config.json',
-          '--skip-validate-spec'
-        ],
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'swagger.yaml',
+          outputPath: 'libs/generated-api',
+          generatorType: 'typescript-axios',
+          context: baseContext,
+          rawOptions: expect.objectContaining({
+            configFile: 'openapi-config.json',
+            skipValidateSpec: true,
+          }),
+        })
       );
     });
 
-    it('should include auth option when provided', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        auth: 'bearer:token123',
-      };
-
-      await executor(options, baseContext);
-
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).toContain('--auth');
-      expect(spawnArgs).toContain('bearer:token123');
-    });
-
-    it('should include globalProperties as separate arguments', async () => {
+    it('should pass global properties to generator', async () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: 'test.json',
         outputPath: 'output',
         globalProperties: {
-          supportsES6: 'true',
-          npmName: 'my-api-client',
+          apiPackage: 'com.example.api',
+          modelPackage: 'com.example.models',
         },
       };
 
-      await executor(options, baseContext);
-
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).toContain('--global-property');
-      expect(spawnArgs).toContain('supportsES6=true');
-      expect(spawnArgs).toContain('npmName=my-api-client');
-    });
-
-    it('should handle paths with spaces correctly', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'path with spaces/openapi.json',
-        outputPath: 'output with spaces',
-        configFile: 'config with spaces/config.json',
-      };
-
-      await executor(options, baseContext);
-
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).toContain('path with spaces/openapi.json');
-      expect(spawnArgs).toContain('output with spaces');
-      expect(spawnArgs).toContain('config with spaces/config.json');
-    });
-  });
-
-  describe('error handling', () => {
-    it('should handle spawn close event with non-zero exit code', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'openapi.json',
-        outputPath: 'libs/api',
-      };
-
-      // Mock spawn to return non-zero exit code
-      mockChildProcess.on.mockImplementation((event: string, callback: Function) => {
-        if (event === 'close') {
-          setTimeout(() => callback(1), 0); // Error exit code
-        }
-        return mockChildProcess;
-      });
-
       const result = await executor(options, baseContext);
 
-      expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        '[test] API generation failed with error'
+      expect(result.success).toBe(true);
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          globalProperties: {
+            apiPackage: 'com.example.api',
+            modelPackage: 'com.example.models',
+          },
+        })
       );
     });
 
-    it('should handle spawn error event', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'openapi.json',
-        outputPath: 'libs/api',
+    it('should use custom generator when specified', async () => {
+      const customGenerator: jest.Mocked<GeneratorPlugin> = {
+        ...mockGeneratorPlugin,
+        name: 'custom-generator',
+        displayName: 'Custom Generator',
       };
-
-      const error = new Error('Spawn failed');
-      mockChildProcess.on.mockImplementation((event: string, callback: Function) => {
-        if (event === 'error') {
-          setTimeout(() => callback(error), 0);
-        }
-        return mockChildProcess;
-      });
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        '[test] API generation failed with error'
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(error);
-    });
-
-    it('should handle rmSync errors', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'openapi.json',
-        outputPath: 'libs/api',
-      };
-
-      const rmError = new Error('Directory not found');
-      mockRmSync.mockImplementation(() => {
-        throw rmError;
-      });
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        '[test] API generation failed with error'
-      );
-    });
-  });
-
-  describe('path handling', () => {
-    it('should join output path with context root correctly', async () => {
-      const contextWithDifferentRoot: ExecutorContext = {
-        ...baseContext,
-        root: '/different/workspace/root',
-      };
-
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'relative/path',
-      };
-
-      await executor(options, contextWithDifferentRoot);
-
-      expect(mockJoin).toHaveBeenCalledWith(
-        '/different/workspace/root',
-        'relative/path'
-      );
-      expect(mockRmSync).toHaveBeenCalledWith(
-        '/different/workspace/root/relative/path',
-        {
-          recursive: true,
-          force: true,
-        }
-      );
-    });
-  });
-
-  describe('logging', () => {
-    it('should log start and completion messages', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'test-output',
-      };
-
-      await executor(options, baseContext);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] Starting to generate API from provided OpenAPI spec...'
-      );
-      expect(mockLogger.verbose).toHaveBeenCalledWith(
-        '[test] Cleaning outputPath test-output first'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] API generation completed successfully.'
-      );
-    });
-  });
-
-  describe('command building', () => {
-    it('should use correct working directory', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'spec.json',
-        outputPath: 'generated',
-      };
-
-      await executor(options, baseContext);
-
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'node',
-        expect.any(Array),
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
-      );
-    });
-
-    it('should build command args with all boolean options', async () => {
+      mockRegistry.get.mockReturnValue(customGenerator);
+      
       const options: GenerateApiExecutorSchema = {
         inputSpec: 'test.json',
         outputPath: 'output',
-        enablePostProcessFile: true,
-        logToStderr: true,
-        minimalUpdate: true,
-        removeOperationIdPrefix: true,
-        skipOverwrite: true,
-        skipOperationExample: true,
-        strictSpec: true,
-        dryRun: true,
-      };
-
-      await executor(options, baseContext);
-
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).toContain('--enable-post-process-file');
-      expect(spawnArgs).toContain('--log-to-stderr');
-      expect(spawnArgs).toContain('--minimal-update');
-      expect(spawnArgs).toContain('--remove-operation-id-prefix');
-      expect(spawnArgs).toContain('--skip-overwrite');
-      expect(spawnArgs).toContain('--skip-operation-example');
-      expect(spawnArgs).toContain('--strict-spec');
-      expect(spawnArgs).toContain('--dry-run');
-    });
-
-    it('should handle string values with special characters', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        httpUserAgent: 'My Custom User Agent 1.0',
-        releaseNote: 'This is a test release with special characters & symbols',
-      };
-
-      await executor(options, baseContext);
-
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).toContain('--http-user-agent');
-      expect(spawnArgs).toContain('My Custom User Agent 1.0');
-      expect(spawnArgs).toContain('--release-note');
-      expect(spawnArgs).toContain('This is a test release with special characters & symbols');
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle empty string values gracefully', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        configFile: '',
+        generator: 'custom-generator',
       };
 
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(true);
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).not.toContain('-c');
-      expect(spawnArgs).not.toContain('');
-    });
-
-    it('should handle undefined configFile correctly', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        configFile: undefined,
-      };
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(true);
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).not.toContain('-c');
-    });
-
-    it('should handle empty globalProperties object', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: 'test.json',
-        outputPath: 'output',
-        globalProperties: {},
-      };
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(true);
-      const spawnArgs = mockSpawn.mock.calls[0][1];
-      expect(spawnArgs).not.toContain('--global-property');
+      expect(mockRegistry.get).toHaveBeenCalledWith('custom-generator');
+      expect(customGenerator.generate).toHaveBeenCalled();
     });
   });
 
   describe('multiple inputSpec support', () => {
-    it('should generate multiple APIs when inputSpec is an object', async () => {
+    it('should handle multiple services', async () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: {
-          'ms-product': 'apps/my-app/ms-product.json',
-          'ms-user': 'apps/my-app/ms-user.json',
-          'ms-inventory': 'apps/my-app/ms-inventory.json',
+          userService: 'user-api.json',
+          productService: 'product-api.json',
+          orderService: 'order-api.json',
         },
-        outputPath: 'libs/api/src',
+        outputPath: 'libs/api-clients',
       };
 
       const result = await executor(options, baseContext);
@@ -436,170 +248,181 @@ describe('GenerateApi Executor', () => {
       
       // Should clean each service directory
       expect(mockRmSync).toHaveBeenCalledTimes(3);
-      expect(mockRmSync).toHaveBeenCalledWith(
-        '/test/workspace/libs/api/src/ms-product',
-        { recursive: true, force: true }
-      );
-      expect(mockRmSync).toHaveBeenCalledWith(
-        '/test/workspace/libs/api/src/ms-user',
-        { recursive: true, force: true }
-      );
-      expect(mockRmSync).toHaveBeenCalledWith(
-        '/test/workspace/libs/api/src/ms-inventory',
-        { recursive: true, force: true }
-      );
-
-      // Should spawn OpenAPI generator for each service
-      expect(mockSpawn).toHaveBeenCalledTimes(3);
+      expect(mockRmSync).toHaveBeenCalledWith('/test/workspace/libs/api-clients/userService', { recursive: true, force: true });
+      expect(mockRmSync).toHaveBeenCalledWith('/test/workspace/libs/api-clients/productService', { recursive: true, force: true });
+      expect(mockRmSync).toHaveBeenCalledWith('/test/workspace/libs/api-clients/orderService', { recursive: true, force: true });
       
-      // Check first service call
-      expect(mockSpawn).toHaveBeenNthCalledWith(1,
-        'node',
-        [
-          'node_modules/@openapitools/openapi-generator-cli/main.js',
-          'generate',
-          '-i', 'apps/my-app/ms-product.json',
-          '-g', 'typescript-angular',
-          '-o', 'libs/api/src/ms-product'
-        ],
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
+      // Should call generate for each service
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledTimes(3);
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'user-api.json',
+          outputPath: 'libs/api-clients/userService',
+        })
       );
-
-      // Check second service call
-      expect(mockSpawn).toHaveBeenNthCalledWith(2,
-        'node',
-        [
-          'node_modules/@openapitools/openapi-generator-cli/main.js',
-          'generate',
-          '-i', 'apps/my-app/ms-user.json',
-          '-g', 'typescript-angular',
-          '-o', 'libs/api/src/ms-user'
-        ],
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'product-api.json',
+          outputPath: 'libs/api-clients/productService',
+        })
       );
-
-      // Check logging
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] Starting to generate APIs from multiple OpenAPI specs...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] Generating API for ms-product...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] API generation for ms-product completed successfully.'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] All API generations completed successfully.'
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'order-api.json',
+          outputPath: 'libs/api-clients/orderService',
+        })
       );
     });
 
     it('should handle single service in object format', async () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: {
-          'my-service': 'path/to/spec.json',
+          api: 'single-api.json',
         },
-        outputPath: 'libs/api',
+        outputPath: 'libs/api-client',
       };
 
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(true);
-      expect(mockSpawn).toHaveBeenCalledTimes(1);
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'node',
-        [
-          'node_modules/@openapitools/openapi-generator-cli/main.js',
-          'generate',
-          '-i', 'path/to/spec.json',
-          '-g', 'typescript-angular',
-          '-o', 'libs/api/my-service'
-        ],
-        {
-          stdio: 'inherit',
-          cwd: '/test/workspace',
-        }
-      );
-    });
-
-    it('should fail if one service generation fails', async () => {
-      const options: GenerateApiExecutorSchema = {
-        inputSpec: {
-          'ms-product': 'apps/my-app/ms-product.json',
-          'ms-user': 'apps/my-app/ms-user.json',
-        },
-        outputPath: 'libs/api/src',
-      };
-
-      let callCount = 0;
-      mockChildProcess.on.mockImplementation((event: string, callback: Function) => {
-        if (event === 'close') {
-          callCount++;
-          // Make the second service fail
-          setTimeout(() => callback(callCount === 2 ? 1 : 0), 0);
-        }
-        return mockChildProcess;
-      });
-
-      const result = await executor(options, baseContext);
-
-      expect(result.success).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        '[test] API generation failed with error'
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledTimes(1);
+      expect(mockGeneratorPlugin.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputSpec: 'single-api.json',
+          outputPath: 'libs/api-client/api',
+        })
       );
     });
 
     it('should handle empty object inputSpec', async () => {
       const options: GenerateApiExecutorSchema = {
         inputSpec: {},
-        outputPath: 'libs/api',
+        outputPath: 'libs/api-client',
       };
 
       const result = await executor(options, baseContext);
 
       expect(result.success).toBe(true);
-      expect(mockSpawn).not.toHaveBeenCalled();
+      expect(mockGeneratorPlugin.generate).not.toHaveBeenCalled();
       expect(mockRmSync).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[test] All API generations completed successfully.'
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle generator not found', async () => {
+      mockRegistry.get.mockReturnValue(undefined);
+      // Mock the auto-install to also fail to find the generator
+      mockAutoInstaller.ensurePluginInstalled.mockRejectedValue(new Error('Plugin not found'));
+      
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: 'test.json',
+        outputPath: 'output',
+        generator: 'nonexistent-generator',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('API generation failed with error')
       );
     });
 
-    it('should pass additional options to each service generation', async () => {
+    it('should handle generator not available', async () => {
+      mockGeneratorPlugin.isAvailable.mockResolvedValue(false);
+      
       const options: GenerateApiExecutorSchema = {
-        inputSpec: {
-          'service-a': 'spec-a.json',
-          'service-b': 'spec-b.json',
-        },
-        outputPath: 'libs/api',
-        skipValidateSpec: true,
-        packageName: 'com.example.api',
-        globalProperties: {
-          supportsES6: 'true',
-        },
+        inputSpec: 'test.json',
+        outputPath: 'output',
       };
 
-      await executor(options, baseContext);
+      const result = await executor(options, baseContext);
 
-      // Check that additional options are passed to both services
-      const firstCallArgs = mockSpawn.mock.calls[0][1];
-      expect(firstCallArgs).toContain('--skip-validate-spec');
-      expect(firstCallArgs).toContain('--package-name');
-      expect(firstCallArgs).toContain('com.example.api');
-      expect(firstCallArgs).toContain('--global-property');
-      expect(firstCallArgs).toContain('supportsES6=true');
+      expect(result.success).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('API generation failed with error')
+      );
+    });
 
-      const secondCallArgs = mockSpawn.mock.calls[1][1];
-      expect(secondCallArgs).toContain('--skip-validate-spec');
-      expect(secondCallArgs).toContain('--package-name');
-      expect(secondCallArgs).toContain('com.example.api');
-      expect(secondCallArgs).toContain('--global-property');
-      expect(secondCallArgs).toContain('supportsES6=true');
+    it('should handle validation errors', async () => {
+      mockGeneratorPlugin.validateOptions.mockReturnValue({
+        valid: false,
+        errors: [{ path: 'inputSpec', message: 'Invalid input specification' }],
+      });
+      
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: 'invalid.json',
+        outputPath: 'output',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('API generation failed with error')
+      );
+    });
+
+    it('should handle generation failure', async () => {
+      mockGeneratorPlugin.generate.mockResolvedValue({
+        success: false,
+        error: new Error('Generation failed'),
+      });
+      
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: 'test.json',
+        outputPath: 'output',
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('API generation failed')
+      );
+    });
+  });
+
+  describe('auto-installation', () => {
+    it('should attempt to load missing generator with auto-install enabled', async () => {
+      // Setup to simulate generator not found initially
+      mockRegistry.get.mockReturnValueOnce(undefined).mockReturnValueOnce(undefined);
+      mockAutoInstaller.ensurePluginInstalled.mockResolvedValue(true);
+      mockPluginLoader.loadPlugin.mockResolvedValue(mockGeneratorPlugin);
+      
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: 'test.json',
+        outputPath: 'output',
+        generator: 'missing-generator',
+        autoInstall: true,
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(true);
+      expect(mockPluginLoader.discoverPlugins).toHaveBeenCalled();
+      expect(mockAutoInstaller.ensurePluginInstalled).toHaveBeenCalledWith(
+        'missing-generator',
+        baseContext,
+        expect.objectContaining({ prompt: true, ci: false })
+      );
+      expect(mockPluginLoader.loadPlugin).toHaveBeenCalledWith('missing-generator');
+    });
+
+    it('should handle auto-install failure', async () => {
+      mockRegistry.get.mockReturnValue(undefined);
+      mockAutoInstaller.ensurePluginInstalled.mockRejectedValue(new Error('Installation failed'));
+      
+      const options: GenerateApiExecutorSchema = {
+        inputSpec: 'test.json',
+        outputPath: 'output',
+        generator: 'missing-generator',
+        autoInstall: true,
+      };
+
+      const result = await executor(options, baseContext);
+
+      expect(result.success).toBe(false);
     });
   });
 });

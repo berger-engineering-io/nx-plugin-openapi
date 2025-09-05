@@ -38,16 +38,16 @@ export class OpenAPIToolsCommandBuilder {
   /**
    * Build command arguments from options
    */
-  buildArgs(options: Record<string, any>): string[] {
+  buildArgs(options: Record<string, unknown>): string[] {
     const args: string[] = [];
 
     // Add base command
     args.push('generate');
 
     // Add required options
-    args.push('-i', options.inputSpec);
-    args.push('-g', options.generatorType || 'typescript-angular');
-    args.push('-o', options.outputPath);
+    args.push('-i', options.inputSpec as string);
+    args.push('-g', (options.generatorType as string) || 'typescript-angular');
+    args.push('-o', options.outputPath as string);
 
     // Process other options
     for (const [key, value] of Object.entries(options)) {
@@ -62,14 +62,14 @@ export class OpenAPIToolsCommandBuilder {
       }
 
       // Handle global properties separately
-      if (key === 'globalProperties' && typeof value === 'object') {
-        this.addGlobalProperties(args, value);
+      if (key === 'globalProperties' && typeof value === 'object' && value !== null) {
+        this.addGlobalProperties(args, value as Record<string, string>);
         continue;
       }
 
       // Handle additional properties
-      if (key === 'additionalProperties' && typeof value === 'object') {
-        this.addAdditionalProperties(args, value);
+      if (key === 'additionalProperties' && typeof value === 'object' && value !== null) {
+        this.addAdditionalProperties(args, value as Record<string, string>);
         continue;
       }
 
@@ -89,7 +89,7 @@ export class OpenAPIToolsCommandBuilder {
   private addFlag(
     args: string[],
     flagConfig: { flag: string; requiresQuotes?: boolean },
-    value: any
+    value: unknown
   ): void {
     if (typeof value === 'boolean' && value === true) {
       // Boolean flag

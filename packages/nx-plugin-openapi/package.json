@@ -3,6 +3,7 @@
   "version": "0.3.0",
   "dependencies": {
     "@nx/devkit": "19.8.14",
+    "@openapitools/openapi-generator-cli": "^2.20.0",
     "tslib": "^2.3.0",
     "zod": "^3.25.67"
   },

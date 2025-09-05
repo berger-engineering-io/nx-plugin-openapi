@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import { logger } from '@nx/devkit';
 import { BaseGenerator } from '../../core/base-generator';
 import {
   GeneratorOptions,

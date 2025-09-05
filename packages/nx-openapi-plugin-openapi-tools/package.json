@@ -24,6 +24,7 @@
     "@openapitools/openapi-generator-cli": "^2.20.0"
   },
   "devDependencies": {
+    "@lambda-solutions/nx-plugin-openapi": "workspace:*",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   },

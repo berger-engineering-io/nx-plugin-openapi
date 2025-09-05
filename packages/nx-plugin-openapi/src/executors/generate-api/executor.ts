@@ -181,6 +181,7 @@ const runExecutor: PromiseExecutor<GenerateApiExecutorSchema> = async (
  */
 function extractGeneratorConfig(options: GenerateApiExecutorSchema): Record<string, unknown> {
   // Remove known non-config fields
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { inputSpec, outputPath, generator, generatorType, autoInstall, globalProperties, ...config } = options;
   return config;
 }

@@ -169,6 +169,7 @@ export abstract class BaseGenerator implements GeneratorPlugin {
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [process.cwd()],
       });
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const packageJson = require(packageJsonPath);
       const version = packageJson.version;
 
