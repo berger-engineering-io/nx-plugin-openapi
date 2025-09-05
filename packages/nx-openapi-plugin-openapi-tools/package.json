@@ -1,0 +1,35 @@
+{
+  "name": "@lambda-solutions/nx-openapi-plugin-openapi-tools",
+  "version": "1.0.0",
+  "description": "OpenAPI Generator CLI plugin for nx-plugin-openapi",
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
+  "keywords": [
+    "nx-openapi-generator",
+    "openapi",
+    "codegen",
+    "nx",
+    "plugin"
+  ],
+  "author": "Lambda Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/berger-engineering-io/nx-plugin-openapi.git"
+  },
+  "peerDependencies": {
+    "@lambda-solutions/nx-plugin-openapi": "^1.0.0"
+  },
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  }
+}

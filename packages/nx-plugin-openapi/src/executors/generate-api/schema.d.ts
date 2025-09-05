@@ -1,6 +1,9 @@
 export interface GenerateApiExecutorSchema {
   inputSpec: string | Record<string, string>;
   outputPath: string;
+  generator?: string;
+  generatorType?: string;
+  autoInstall?: boolean;
   configFile?: string;
   skipValidateSpec?: boolean;
   auth?: string;

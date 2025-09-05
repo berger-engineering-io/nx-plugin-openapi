@@ -25,6 +25,21 @@
       "type": "string",
       "description": "Output directory for the generated API code"
     },
+    "generator": {
+      "type": "string",
+      "description": "The generator plugin to use (e.g., 'openapi-tools', 'orval', 'openapi-typescript')",
+      "default": "openapi-tools",
+      "enum": ["openapi-tools", "orval", "openapi-typescript"]
+    },
+    "generatorType": {
+      "type": "string",
+      "description": "The specific generator type to use (depends on the selected generator)"
+    },
+    "autoInstall": {
+      "type": "boolean",
+      "description": "Automatically install missing generator plugins",
+      "default": true
+    },
     "configFile": {
       "type": "string",
       "description": "Path to a custom configuration file"
