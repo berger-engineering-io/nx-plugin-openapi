@@ -17,6 +17,10 @@
     "paths": {
       "@lambda-solutions/nx-plugin-openapi": [
         "packages/nx-plugin-openapi/src/index.ts"
+      ],
+      "@nx-plugin-openapi/core": ["packages/core/src/index.ts"],
+      "@nx-plugin-openapi/plugin-openapi": [
+        "packages/plugin-openapi/src/index.ts"
       ]
     }
   },

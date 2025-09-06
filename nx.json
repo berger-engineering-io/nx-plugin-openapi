@@ -77,5 +77,13 @@
       "preVersionCommand": "npx nx run-many -t build",
       "conventionalCommits": true
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "eslint:lint"
+      }
+    }
+  ]
 }
