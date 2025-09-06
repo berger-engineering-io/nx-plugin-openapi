@@ -31,4 +31,7 @@ export interface GenerateApiExecutorSchema {
   skipOperationExample?: boolean;
   strictSpec?: boolean;
   templateDirectory?: string;
+  generator?: string;
+  autoInstall?: boolean;
+  generatorOptions?: Record<string, unknown>;
 }

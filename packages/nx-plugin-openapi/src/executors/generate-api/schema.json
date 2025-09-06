@@ -156,6 +156,21 @@
     "templateDirectory": {
       "type": "string",
       "description": "Directory containing custom templates"
+    },
+    "generator": {
+      "type": "string",
+      "description": "Name of the generator plugin to use",
+      "default": "openapi-tools"
+    },
+    "autoInstall": {
+      "type": "boolean",
+      "description": "Automatically install missing plugins",
+      "default": false
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "Generator-specific options",
+      "additionalProperties": true
     }
   },
   "required": [

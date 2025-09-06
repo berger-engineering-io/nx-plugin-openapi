@@ -15,6 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@lambda-solutions/nx-openapi-plugin-openapi-tools": [
+        "packages/nx-openapi-plugin-openapi-tools/src/index.ts"
+      ],
       "@lambda-solutions/nx-plugin-openapi": [
         "packages/nx-plugin-openapi/src/index.ts"
       ],
