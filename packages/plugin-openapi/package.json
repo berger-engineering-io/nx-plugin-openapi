@@ -1,10 +1,38 @@
 {
   "name": "@nx-plugin-openapi/plugin-openapi",
   "version": "0.0.1",
+  "description": "OpenAPI Tools generator plugin for nx-plugin-openapi",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "type": "commonjs",
+  "keywords": [
+    "nx",
+    "plugin",
+    "openapi",
+    "generator",
+    "api",
+    "typescript",
+    "angular"
+  ],
   "dependencies": {
+    "@nx-plugin-openapi/core": "workspace:*",
+    "@openapitools/openapi-generator-cli": "^2.13.4",
     "tslib": "^2.3.0"
   },
-  "type": "commonjs",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts"
+  "peerDependencies": {
+    "@nx-plugin-openapi/core": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "require": "./src/index.js",
+      "import": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/**/*",
+    "README.md",
+    "CHANGELOG.md"
+  ]
 }
