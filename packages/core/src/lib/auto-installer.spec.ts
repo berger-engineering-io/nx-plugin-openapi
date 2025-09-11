@@ -264,9 +264,10 @@ describe('auto-installer', () => {
       it('should handle empty package list', () => {
         installPackages([]);
 
-        expect(execSync).toHaveBeenCalledWith('pnpm add -D ', {
-          stdio: 'inherit',
-        });
+        expect(execSync).not.toHaveBeenCalledWith(
+          expect.stringContaining('add'),
+          expect.any(Object)
+        );
       });
     });
   });

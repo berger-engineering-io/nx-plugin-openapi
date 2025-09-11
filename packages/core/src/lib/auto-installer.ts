@@ -27,6 +27,8 @@ export function installPackages(
   pkgs: string[],
   opts?: { dev?: boolean }
 ): void {
+  if (pkgs.length === 0) return;
+
   const pm = detectPackageManager();
   const dev = opts?.dev ?? true;
   const devFlag = dev ? (pm === 'yarn' ? '-D' : '--save-dev') : '';
