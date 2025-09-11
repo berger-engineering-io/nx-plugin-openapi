@@ -58,7 +58,6 @@ export async function loadPlugin(
     if (pkg === '@nx-plugin-openapi/plugin-openapi') {
       candidates.push(
         `${root}/dist/packages/plugin-openapi/src/index.js`,
-        `${root}/packages/plugin-openapi/src/index.ts`,
         `${root}/packages/plugin-openapi/src/index.js`
       );
     }
