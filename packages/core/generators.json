@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/nx-generators.json",
+  "generators": {
+    "add-generate-api-target": {
+      "factory": "./src/generators/add-generate-api-target/generator",
+      "schema": "./src/generators/add-generate-api-target/schema.json",
+      "description": "Add a generate-api target using the core executor"
+    },
+    "init": {
+      "factory": "./src/generators/init/generator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize core plugin defaults"
+    }
+  }
+}

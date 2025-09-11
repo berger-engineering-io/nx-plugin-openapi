@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "InitCoreSchema",
+  "title": "Initialize @nx-plugin-openapi/core",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

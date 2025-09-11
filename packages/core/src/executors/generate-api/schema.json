@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "Core Generate API Executor",
+  "description": "Generate API code via plugin abstraction",
+  "type": "object",
+  "properties": {
+    "generator": {
+      "type": "string",
+      "description": "Generator plugin to use (e.g., 'openapi-tools')",
+      "default": "openapi-tools"
+    },
+    "inputSpec": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": { "type": "string" } }
+      ],
+      "description": "OpenAPI spec path or a map of name->specPath"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Relative output path"
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "Plugin-specific options",
+      "additionalProperties": true
+    }
+  },
+  "required": ["inputSpec", "outputPath"],
+  "additionalProperties": true
+}
