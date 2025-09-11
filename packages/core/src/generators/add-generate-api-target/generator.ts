@@ -15,7 +15,7 @@ export async function addGenerateApiGenerator(
   tree: Tree,
   options: AddGenerateApiSchema
 ) {
-  const targetName = options.targetName || 'generate-api-with-core';
+  const targetName = options.targetName || 'generate-api';
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 
