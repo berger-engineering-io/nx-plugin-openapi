@@ -50,7 +50,7 @@ export async function loadPlugin(name: string): Promise<GeneratorPlugin> {
     return candidate;
   } catch (e) {
     const msg = String(e);
-    const code = (e as Record<string, unknown>)?.code;
+    const code = (e as Record<string, unknown>)?.['code'];
     if (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) {
       throw new PluginNotFoundError(name);
     }
