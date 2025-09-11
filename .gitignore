@@ -48,3 +48,4 @@ Thumbs.db
 /.scratchpads/
 apps/demo/src/appapps/demo/src/app/api/
 apps/demo/src/appapps/demo/src/app/api-services/
+/apps/demo/src/app/api-core/
