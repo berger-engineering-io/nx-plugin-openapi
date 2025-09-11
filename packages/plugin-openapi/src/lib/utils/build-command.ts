@@ -81,8 +81,11 @@ export function buildCommandArgs(options: OpenApiGeneratorOptions): string[] {
   args.push('-g', 'typescript-angular');
   args.push('-o', options.outputPath!);
 
-  for (const [optionKey, flagConfig] of Object.entries(OPTION_FLAG_MAP)) {
-    const value = (options as any)[optionKey];
+  for (const [optionKey, flagConfig] of Object.entries(OPTION_FLAG_MAP) as [
+    keyof OpenApiGeneratorOptions,
+    FlagConfig | string
+  ][]) {
+    const value = options[optionKey] as unknown;
     if (
       value === undefined ||
       value === null ||

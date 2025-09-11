@@ -1,8 +1,11 @@
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { OpenApiToolsGenerator } from './openapi-tools-generator';
-import { buildCommandArgs } from './utils/build-command';
-import { GeneratorContext } from '@nx-plugin-openapi/core';
+import {
+  buildCommandArgs,
+  OpenApiGeneratorOptions,
+} from './utils/build-command';
+import { GenerateOptionsBase, GeneratorContext } from '@nx-plugin-openapi/core';
 
 // Mock node:child_process
 jest.mock('node:child_process', () => ({
@@ -14,10 +17,17 @@ jest.mock('./utils/build-command', () => ({
   buildCommandArgs: jest.fn(),
 }));
 
+type MockChildProcess = EventEmitter & { on: jest.Mock };
+type GeneratorWithCleanOutput = {
+  cleanOutput: (...args: unknown[]) => unknown;
+};
+
 describe('OpenApiToolsGenerator', () => {
   let generator: OpenApiToolsGenerator;
   let mockContext: GeneratorContext;
-  let mockChildProcess: any;
+  let mockChildProcess: MockChildProcess;
+  let generatorWithCleanOutput: GeneratorWithCleanOutput;
+  let cleanOutputSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,7 +38,7 @@ describe('OpenApiToolsGenerator', () => {
     };
 
     // Create a mock child process
-    mockChildProcess = new EventEmitter();
+    mockChildProcess = new EventEmitter() as MockChildProcess;
     mockChildProcess.on = jest.fn(mockChildProcess.on.bind(mockChildProcess));
     (spawn as jest.Mock).mockReturnValue(mockChildProcess);
 
@@ -42,7 +52,10 @@ describe('OpenApiToolsGenerator', () => {
     ]);
 
     // Mock cleanOutput method
-    jest.spyOn(generator as any, 'cleanOutput').mockImplementation(() => {});
+    generatorWithCleanOutput = generator as unknown as GeneratorWithCleanOutput;
+    cleanOutputSpy = jest
+      .spyOn(generatorWithCleanOutput, 'cleanOutput')
+      .mockImplementation(() => {});
   });
 
   describe('name', () => {
@@ -69,7 +82,7 @@ describe('OpenApiToolsGenerator', () => {
 
         await generatePromise;
 
-        expect((generator as any).cleanOutput).toHaveBeenCalledWith(
+        expect(cleanOutputSpy).toHaveBeenCalledWith(
           mockContext,
           'src/generated'
         );
@@ -176,31 +189,31 @@ describe('OpenApiToolsGenerator', () => {
           generatorOptions: {
             generator: 'typescript-axios',
           },
-        } as any;
+        } as unknown as OpenApiGeneratorOptions & GenerateOptionsBase;
 
         const generatePromise = generator.generate(options, mockContext);
 
         // Simulate successful execution for all three
         const emitClose = () => mockChildProcess.emit('close', 0);
         await emitClose();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
         await emitClose();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
         await emitClose();
 
         await generatePromise;
 
         // Should clean output for each service
-        expect((generator as any).cleanOutput).toHaveBeenCalledTimes(3);
-        expect((generator as any).cleanOutput).toHaveBeenCalledWith(
+        expect(cleanOutputSpy).toHaveBeenCalledTimes(3);
+        expect(cleanOutputSpy).toHaveBeenCalledWith(
           mockContext,
           'src/api/users'
         );
-        expect((generator as any).cleanOutput).toHaveBeenCalledWith(
+        expect(cleanOutputSpy).toHaveBeenCalledWith(
           mockContext,
           'src/api/products'
         );
-        expect((generator as any).cleanOutput).toHaveBeenCalledWith(
+        expect(cleanOutputSpy).toHaveBeenCalledWith(
           mockContext,
           'src/api/orders'
         );
@@ -234,7 +247,7 @@ describe('OpenApiToolsGenerator', () => {
             products: 'products.yaml',
           },
           outputPath: 'src/api',
-        } as any;
+        } as unknown as OpenApiGeneratorOptions & GenerateOptionsBase;
 
         const generatePromise = generator.generate(options, mockContext);
 
@@ -254,7 +267,7 @@ describe('OpenApiToolsGenerator', () => {
             'product-service': 'specs/products.yaml',
           },
           outputPath: 'generated',
-        } as any;
+        } as unknown as OpenApiGeneratorOptions & GenerateOptionsBase;
 
         const generatePromise = generator.generate(options, mockContext);
 

@@ -204,8 +204,8 @@ describe('buildCommandArgs', () => {
       const options: OpenApiGeneratorOptions = {
         inputSpec: 'api.yaml',
         outputPath: 'output',
-        auth: null as any,
-        packageName: null as any,
+        auth: null as unknown as string,
+        packageName: null as unknown as string,
       };
 
       const result = buildCommandArgs(options);
