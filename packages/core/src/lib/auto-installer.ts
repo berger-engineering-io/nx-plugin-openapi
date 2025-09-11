@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 export type PackageManager = 'npm' | 'pnpm' | 'yarn';
 
 export function detectCi(): boolean {
-  return Boolean(process.env.CI);
+  return Boolean(process.env['CI']);
 }
 
 export function detectPackageManager(): PackageManager {
@@ -11,11 +11,15 @@ export function detectPackageManager(): PackageManager {
   try {
     execSync('pnpm -v', { stdio: 'ignore' });
     return 'pnpm';
-  } catch {}
+  } catch {
+    /* noop */
+  }
   try {
     execSync('yarn -v', { stdio: 'ignore' });
     return 'yarn';
-  } catch {}
+  } catch {
+    /* noop */
+  }
   return 'npm';
 }
 
@@ -35,8 +39,8 @@ export function installPackages(
   if (!detectCi()) {
     try {
       execSync(cmd, { stdio: 'inherit' });
-    } catch (e) {
-      // Non-fatal: leave it to the user
+    } catch {
+      /* Non-fatal: leave it to the user */
     }
   }
 }

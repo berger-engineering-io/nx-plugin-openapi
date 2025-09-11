@@ -27,6 +27,17 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "generate-api-with-core": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "inputSpec": "apps/demo/swagger.json",
+        "outputPath": "apps/demo/src/app/api-core",
+        "generatorOptions": {
+          "skipValidateSpec": true
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    },
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],

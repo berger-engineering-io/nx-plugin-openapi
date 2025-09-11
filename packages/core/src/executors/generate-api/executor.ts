@@ -24,20 +24,27 @@ const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
 
     // Validate if plugin offers it
     if (typeof plugin.validate === 'function') {
-      await plugin.validate({ inputSpec, outputPath, generatorOptions } as any);
+      await plugin.validate({
+        inputSpec,
+        outputPath,
+        generatorOptions,
+      } as never);
     }
 
     // Execute
-    await plugin.generate({ inputSpec, outputPath, generatorOptions } as any, {
-      root: context.root,
-      workspaceName: context.projectName,
-    });
+    await plugin.generate(
+      { inputSpec, outputPath, generatorOptions } as never,
+      {
+        root: context.root,
+        workspaceName: context.projectName,
+      }
+    );
 
     logger.info(`Finished generating API using '${generator}'`);
     return { success: true };
   } catch (e) {
     logger.error(`API generation failed using '${generator}'`);
-    logger.error(e as any);
+    logger.error(e as unknown as Error);
     return { success: false };
   }
 };

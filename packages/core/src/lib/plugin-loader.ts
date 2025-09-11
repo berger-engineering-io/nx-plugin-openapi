@@ -8,43 +8,50 @@ const BUILTIN_PLUGIN_MAP: Record<string, string> = {
 
 const cache = new Map<string, GeneratorPlugin>();
 
+function isPlugin(obj: unknown): obj is GeneratorPlugin {
+  return (
+    !!obj && typeof (obj as { generate?: unknown }).generate === 'function'
+  );
+}
+
 export async function loadPlugin(name: string): Promise<GeneratorPlugin> {
   if (GeneratorRegistry.instance().has(name)) {
     return GeneratorRegistry.instance().get(name);
   }
-  if (cache.has(name)) return cache.get(name)!;
+  const cached = cache.get(name);
+  if (cached) return cached;
 
   const pkg = BUILTIN_PLUGIN_MAP[name] ?? name;
   try {
-    // Prefer ESM dynamic import, fallback to require
-    let mod: any;
-    try {
-      mod = await import(pkg);
-    } catch {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      mod = require(pkg);
-    }
-    const plugin: GeneratorPlugin =
-      mod?.default?.name && typeof mod.default.generate === 'function'
-        ? mod.default
-        : typeof mod.createPlugin === 'function'
-        ? mod.createPlugin()
-        : mod?.plugin || mod?.Plugin || mod;
+    const mod = (await import(pkg)) as {
+      default?: unknown;
+      createPlugin?: unknown;
+      plugin?: unknown;
+      Plugin?: unknown;
+    };
 
-    if (!plugin || typeof plugin.generate !== 'function') {
+    let candidate: unknown = undefined;
+    if (isPlugin(mod.default)) {
+      candidate = mod.default;
+    } else if (typeof mod.createPlugin === 'function') {
+      candidate = (mod.createPlugin as () => unknown)();
+    } else {
+      candidate = mod.plugin ?? mod.Plugin;
+    }
+
+    if (!isPlugin(candidate)) {
       throw new PluginLoadError(
         name,
         new Error('Module does not export a plugin')
       );
     }
 
-    cache.set(name, plugin);
-    return plugin;
+    cache.set(name, candidate);
+    return candidate;
   } catch (e) {
-    if (
-      (e as any).code === 'ERR_MODULE_NOT_FOUND' ||
-      /Cannot find module/.test(String(e))
-    ) {
+    const msg = String(e);
+    const code = (e as Record<string, unknown>)?.code;
+    if (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) {
       throw new PluginNotFoundError(name);
     }
     throw new PluginLoadError(name, e);
