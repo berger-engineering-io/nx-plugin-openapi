@@ -64,12 +64,12 @@ describe('BaseGenerator', () => {
       });
     });
 
-    it('should handle root directory paths', () => {
-      const relOutputPath = '/';
+    it('should handle valid nested paths', () => {
+      const relOutputPath = 'src/generated/api';
 
       generator.testCleanOutput(mockContext, relOutputPath);
 
-      expect(rmSync).toHaveBeenCalledWith('/workspace/', {
+      expect(rmSync).toHaveBeenCalledWith('/workspace/src/generated/api', {
         recursive: true,
         force: true,
       });
@@ -116,15 +116,44 @@ describe('BaseGenerator', () => {
       );
     });
 
-    it('should handle empty path', () => {
+    it('should throw error for empty path', () => {
       const relOutputPath = '';
 
-      generator.testCleanOutput(mockContext, relOutputPath);
+      expect(() => {
+        generator.testCleanOutput(mockContext, relOutputPath);
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
 
-      expect(rmSync).toHaveBeenCalledWith('/workspace', {
-        recursive: true,
-        force: true,
-      });
+      expect(rmSync).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for whitespace-only path', () => {
+      const relOutputPath = '   ';
+
+      expect(() => {
+        generator.testCleanOutput(mockContext, relOutputPath);
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+
+      expect(rmSync).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for root path', () => {
+      const relOutputPath = '/';
+
+      expect(() => {
+        generator.testCleanOutput(mockContext, relOutputPath);
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+
+      expect(rmSync).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for current directory path', () => {
+      const relOutputPath = '.';
+
+      expect(() => {
+        generator.testCleanOutput(mockContext, relOutputPath);
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+
+      expect(rmSync).not.toHaveBeenCalled();
     });
   });
 });
