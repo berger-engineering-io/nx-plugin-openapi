@@ -72,12 +72,14 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 
 function updateTargetDefaults(tree: Tree): void {
   const nxJson = readNxJson(tree);
-  const targetDefaults =
-    nxJson.targetDefaults || (nxJson.targetDefaults = {} as any);
+  const targetDefaults = (nxJson.targetDefaults ||= {} as Record<
+    string,
+    unknown
+  >);
   targetDefaults['@nx-plugin-openapi/core:generate-api'] = {
     cache: true,
     inputs: ['{projectRoot}/swagger.json', '{projectRoot}/openapitools.json'],
-  } as any;
+  } as { cache: boolean; inputs: string[] };
   updateNxJson(tree, nxJson);
 }
 
