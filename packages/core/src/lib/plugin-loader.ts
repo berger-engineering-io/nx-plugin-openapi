@@ -14,7 +14,10 @@ function isPlugin(obj: unknown): obj is GeneratorPlugin {
   );
 }
 
-export async function loadPlugin(name: string): Promise<GeneratorPlugin> {
+export async function loadPlugin(
+  name: string,
+  opts?: { root?: string }
+): Promise<GeneratorPlugin> {
   if (GeneratorRegistry.instance().has(name)) {
     return GeneratorRegistry.instance().get(name);
   }
@@ -49,6 +52,30 @@ export async function loadPlugin(name: string): Promise<GeneratorPlugin> {
     cache.set(name, candidate);
     return candidate;
   } catch (e) {
+    // Fallback to workspace-relative resolution if provided
+    const root = opts?.root ?? process.cwd();
+    const candidates: string[] = [];
+    if (pkg === '@nx-plugin-openapi/plugin-openapi') {
+      candidates.push(
+        `${root}/dist/packages/plugin-openapi/src/index.js`,
+        `${root}/packages/plugin-openapi/src/index.ts`,
+        `${root}/packages/plugin-openapi/src/index.js`
+      );
+    }
+    for (const p of candidates) {
+      try {
+        const url = `file://${p}`;
+        const mod2 = (await import(url)) as { default?: unknown };
+        if (isPlugin(mod2?.default)) {
+          const plugin2 = mod2.default as GeneratorPlugin;
+          cache.set(name, plugin2);
+          return plugin2;
+        }
+      } catch {
+        // try next candidate
+      }
+    }
+
     const msg = String(e);
     const code = (e as Record<string, unknown>)?.['code'];
     if (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) {
