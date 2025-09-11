@@ -29,6 +29,8 @@ export async function addGenerateApiGenerator(
   }
 
   addTarget({ projectConfig, targetName, options });
+  // Update build target's dependsOn if it exists
+  updateBuildTargetDependsOn({ projectConfig, targetName });
   updateProjectConfiguration(tree, options.project, projectConfig);
 
   if (options.addToGitignore) {
@@ -73,4 +75,23 @@ function addTarget(args: {
       outputs: ['{options.outputPath}'],
     },
   };
+}
+
+function updateBuildTargetDependsOn(args: {
+  projectConfig: ProjectConfiguration;
+  targetName: string;
+}) {
+  const { projectConfig, targetName } = args;
+  const buildTarget = projectConfig.targets?.['build'];
+
+  if (buildTarget) {
+    if (!buildTarget.dependsOn) {
+      buildTarget.dependsOn = [];
+    }
+
+    // Check if the target is already in dependsOn
+    if (!buildTarget.dependsOn.includes(targetName)) {
+      buildTarget.dependsOn.push(targetName);
+    }
+  }
 }
