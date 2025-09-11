@@ -27,6 +27,39 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "generate-api-with-plugin": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": "apps/demo/swagger.json",
+        "outputPath": "apps/demo/src/app/api-plugin",
+        "skipValidateSpec": true,
+        "generator": "openapi-tools",
+        "autoInstall": false,
+        "generatorOptions": {
+          "generatorType": "typescript-angular"
+        }
+      },
+      "outputs": ["{options.outputPath}"],
+      "description": "Demonstrates using the new plugin system with the OpenAPI Tools generator plugin"
+    },
+    "generate-api-multiple-with-plugin": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": {
+          "user-service": "apps/demo/apis/user-service.json",
+          "product-service": "apps/demo/apis/product-service.json"
+        },
+        "outputPath": "apps/demo/src/app/api-services-plugin",
+        "skipValidateSpec": true,
+        "generator": "openapi-tools",
+        "autoInstall": false,
+        "generatorOptions": {
+          "generatorType": "typescript-angular"
+        }
+      },
+      "outputs": ["{options.outputPath}"],
+      "description": "Demonstrates using the new plugin system with multiple OpenAPI specs"
+    },
     "build": {
       "executor": "@angular-devkit/build-angular:application",
       "outputs": ["{options.outputPath}"],
