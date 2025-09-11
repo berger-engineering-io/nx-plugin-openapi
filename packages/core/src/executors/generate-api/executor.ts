@@ -16,7 +16,7 @@ const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
   try {
     // Ensure plugin is available (load + register if needed)
     if (!GeneratorRegistry.instance().has(generator)) {
-      const plugin = await loadPlugin(generator);
+      const plugin = await loadPlugin(generator, { root: context.root });
       GeneratorRegistry.instance().register(plugin);
     }
 
