@@ -181,9 +181,12 @@ describe('OpenApiToolsGenerator', () => {
         const generatePromise = generator.generate(options, mockContext);
 
         // Simulate successful execution for all three
-        process.nextTick(() => mockChildProcess.emit('close', 0));
-        setTimeout(() => mockChildProcess.emit('close', 0), 10);
-        setTimeout(() => mockChildProcess.emit('close', 0), 20);
+        const emitClose = () => mockChildProcess.emit('close', 0);
+        await emitClose();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await emitClose();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await emitClose();
 
         await generatePromise;
 
