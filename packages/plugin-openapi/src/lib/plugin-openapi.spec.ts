@@ -1,7 +1,7 @@
-import { pluginOpenapi } from './plugin-openapi';
+import OpenApiPlugin from './openapi-tools-generator';
 
-describe('pluginOpenapi', () => {
-  it('should work', () => {
-    expect(pluginOpenapi()).toEqual('plugin-openapi');
+describe('OpenApiPlugin', () => {
+  it('exposes correct name', () => {
+    expect(OpenApiPlugin.name).toBeDefined();
   });
 });

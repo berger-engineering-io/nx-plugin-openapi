@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/nx-executors.json",
+  "executors": {
+    "generate-api": {
+      "implementation": "./src/executors/generate-api/executor",
+      "schema": "./src/executors/generate-api/schema.json",
+      "description": "Generate API code using a selected generator plugin"
+    }
+  }
+}
