@@ -26,6 +26,7 @@
     "@angular/language-service": "~18.2.0",
     "@astrojs/starlight": "^0.34.4",
     "@eslint/js": "^9.8.0",
+    "@hey-api/openapi-ts": "^0.83.1",
     "@nx/angular": "19.8.14",
     "@nx/eslint": "19.8.14",
     "@nx/eslint-plugin": "19.8.14",
