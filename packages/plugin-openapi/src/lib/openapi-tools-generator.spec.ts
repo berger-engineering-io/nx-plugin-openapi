@@ -117,9 +117,7 @@ describe('OpenApiToolsGenerator', () => {
           outputPath: 'src/generated',
         };
 
-        const generatePromise = generator.generate(options, mockContext);
-
-        // Simulate failure on all attempts
+        // Simulate failure on all attempts - set up mock BEFORE calling generate
         let attemptCount = 0;
         (spawn as jest.Mock).mockImplementation(() => {
           attemptCount++;
@@ -129,7 +127,7 @@ describe('OpenApiToolsGenerator', () => {
           return childProcess;
         });
 
-        await expect(generatePromise).rejects.toThrow(
+        await expect(generator.generate(options, mockContext)).rejects.toThrow(
           'Failed to generate code after 1 attempts'
         );
         expect(attemptCount).toBe(1);
@@ -141,9 +139,7 @@ describe('OpenApiToolsGenerator', () => {
           outputPath: 'src/generated',
         };
 
-        const generatePromise = generator.generate(options, mockContext);
-
-        // Simulate error on all attempts
+        // Simulate error on all attempts - set up mock BEFORE calling generate
         let attemptCount = 0;
         (spawn as jest.Mock).mockImplementation(() => {
           attemptCount++;
@@ -154,7 +150,7 @@ describe('OpenApiToolsGenerator', () => {
           return childProcess;
         });
 
-        await expect(generatePromise).rejects.toThrow(
+        await expect(generator.generate(options, mockContext)).rejects.toThrow(
           'Failed to generate code after 1 attempts'
         );
         expect(attemptCount).toBe(1);
@@ -273,9 +269,7 @@ describe('OpenApiToolsGenerator', () => {
           outputPath: 'src/api',
         } as unknown as OpenApiGeneratorOptions & GenerateOptionsBase;
 
-        const generatePromise = generator.generate(options, mockContext);
-
-        // Mock spawn to simulate first succeeding, second failing
+        // Mock spawn to simulate first succeeding, second failing - set up mock BEFORE calling generate
         let callCount = 0;
         (spawn as jest.Mock).mockImplementation(() => {
           callCount++;
@@ -293,7 +287,7 @@ describe('OpenApiToolsGenerator', () => {
           return childProcess;
         });
 
-        await expect(generatePromise).rejects.toThrow(
+        await expect(generator.generate(options, mockContext)).rejects.toThrow(
           'Failed to generate code after 1 attempts'
         );
       }, 10000);
