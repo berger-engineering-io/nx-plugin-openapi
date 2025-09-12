@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "dependencies": {
     "@nx-plugin-openapi/core": "0.0.1",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "19.8.14"
   },
   "peerDependencies": {
     "@nx-plugin-openapi/core": ">=0.0.1"
