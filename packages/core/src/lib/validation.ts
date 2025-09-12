@@ -1,7 +1,7 @@
 // Core validation utilities
 import { ValidationError, InvalidPathError } from './errors';
 import { isValidInputSpec, assertValidPath } from './type-guards';
-import { logger } from './logger';
+import { logger } from '@nx/devkit';
 
 export interface ValidationResult {
   valid: boolean;
