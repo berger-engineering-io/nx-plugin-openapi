@@ -2,7 +2,7 @@ import { GeneratorPlugin } from './interfaces';
 import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorRegistry } from './registry';
 import { isGeneratorPlugin } from './type-guards';
-import { logger } from './logger';
+import { logger } from '@nx/devkit';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
@@ -110,11 +110,11 @@ export async function loadPlugin(
     const code = (e as Record<string, unknown>)?.['code'];
     
     if (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) {
-      logger.error(`Plugin not found: ${name}`, { searchPaths });
+      logger.error(`Plugin not found: ${name}. Searched paths: ${JSON.stringify(searchPaths)}`);
       throw new PluginNotFoundError(name, searchPaths);
     }
     
-    logger.error(`Failed to load plugin: ${name}`, e);
+    logger.error(`Failed to load plugin: ${name}. Error: ${e}`);
     throw new PluginLoadError(name, e);
   }
 }
