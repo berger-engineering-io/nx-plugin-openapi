@@ -101,8 +101,16 @@ export async function loadPlugin(
       for (const p of fallbackPaths) {
         try {
           logger.debug(`Attempting to load from: ${p}`);
-          const url = `file://${p}`;
-          const mod2 = (await import(url)) as { default?: unknown };
+          let mod2: { default?: unknown } | undefined;
+          try {
+            // Prefer require for CJS outputs
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            mod2 = require(p);
+          } catch {
+            const { pathToFileURL } = await import('node:url');
+            const url = pathToFileURL(p).href;
+            mod2 = (await import(url)) as { default?: unknown };
+          }
 
           if (isGeneratorPlugin(mod2?.default)) {
             const plugin2 = mod2.default;

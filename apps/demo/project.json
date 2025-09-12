@@ -30,10 +30,11 @@
     "generate-api-with-core": {
       "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "hey-openapi",
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "apps/demo/src/app/api-core",
         "generatorOptions": {
-          "skipValidateSpec": true
+          "client": "fetch"
         }
       },
       "outputs": ["{options.outputPath}"]
