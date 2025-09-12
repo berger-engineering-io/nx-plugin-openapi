@@ -31,14 +31,11 @@ export class HeyOpenApiGenerator
 
     if (typeof inputSpec === 'string') {
       this.cleanOutput(ctx, outputPath);
-      await this.invokeOpenApiTs(
-        {
-          input: inputSpec,
-          output: join(ctx.root, outputPath),
-          ...generatorOptions,
-        },
-        ctx
-      );
+      await this.invokeOpenApiTs({
+        input: inputSpec,
+        output: join(ctx.root, outputPath),
+        ...generatorOptions,
+      });
     } else {
       const entries = Object.entries(inputSpec as Record<string, string>) as [
         string,
@@ -51,14 +48,11 @@ export class HeyOpenApiGenerator
         logger.info(`Generating service: ${serviceName}`);
         const serviceOutputPath = join(outputPath, serviceName);
         this.cleanOutput(ctx, serviceOutputPath);
-        await this.invokeOpenApiTs(
-          {
-            input: specPath,
-            output: join(ctx.root, serviceOutputPath),
-            ...generatorOptions,
-          },
-          ctx
-        );
+        await this.invokeOpenApiTs({
+          input: specPath,
+          output: join(ctx.root, serviceOutputPath),
+          ...generatorOptions,
+        });
       }
     }
 
@@ -66,8 +60,7 @@ export class HeyOpenApiGenerator
   }
 
   private async invokeOpenApiTs(
-    config: { input: string; output: string } & Record<string, unknown>,
-    _ctx: GeneratorContext
+    config: { input: string; output: string } & Record<string, unknown>
   ): Promise<void> {
     let mod: Record<string, unknown>;
     try {
@@ -79,11 +72,16 @@ export class HeyOpenApiGenerator
       );
     }
 
+    const generateExport = (mod as Record<string, unknown>)['generate'];
+    const createClientExport = (mod as Record<string, unknown>)['createClient'];
+
     const fn =
-      typeof (mod as any).generate === 'function'
-        ? ((mod as any).generate as (cfg: unknown) => Promise<unknown>)
-        : typeof (mod as any).createClient === 'function'
-        ? ((mod as any).createClient as (cfg: unknown) => Promise<unknown>)
+      typeof generateExport === 'function'
+        ? (generateExport as (cfg: Record<string, unknown>) => Promise<unknown>)
+        : typeof createClientExport === 'function'
+        ? (createClientExport as (
+            cfg: Record<string, unknown>
+          ) => Promise<unknown>)
         : undefined;
 
     if (!fn) {
@@ -95,7 +93,7 @@ export class HeyOpenApiGenerator
       );
     }
 
-    await fn(config);
+    await fn(config as Record<string, unknown>);
   }
 }
 
