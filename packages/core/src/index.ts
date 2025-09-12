@@ -4,3 +4,6 @@ export * from './lib/registry';
 export * from './lib/plugin-loader';
 export * from './lib/base-generator';
 export * from './lib/auto-installer';
+export * from './lib/type-guards';
+export * from './lib/logger';
+export * from './lib/validation';

@@ -33,6 +33,9 @@ export interface OpenApiGeneratorOptions {
   templateDirectory?: string;
 }
 
+export type RequiredOptions = Required<Pick<OpenApiGeneratorOptions, 'inputSpec' | 'outputPath'>>;
+export type CompleteOptions = RequiredOptions & OpenApiGeneratorOptions;
+
 interface FlagConfig {
   flag: string;
   requiresQuotes?: boolean;
@@ -74,38 +77,62 @@ const OPTION_FLAG_MAP: OptionFlagMap = {
   templateDirectory: '--template-dir',
 };
 
+function assertRequiredOptions(options: OpenApiGeneratorOptions): asserts options is CompleteOptions {
+  if (!options.inputSpec) {
+    throw new Error('inputSpec is required for OpenAPI generator');
+  }
+  if (!options.outputPath) {
+    throw new Error('outputPath is required for OpenAPI generator');
+  }
+}
+
 export function buildCommandArgs(options: OpenApiGeneratorOptions): string[] {
+  assertRequiredOptions(options);
+  
   const args: string[] = [];
   args.push('generate');
-  args.push('-i', options.inputSpec!);
+  args.push('-i', options.inputSpec);
   args.push('-g', 'typescript-angular');
-  args.push('-o', options.outputPath!);
+  args.push('-o', options.outputPath);
 
   for (const [optionKey, flagConfig] of Object.entries(OPTION_FLAG_MAP) as [
     keyof OpenApiGeneratorOptions,
     FlagConfig | string
   ][]) {
-    const value = options[optionKey] as unknown;
-    if (
-      value === undefined ||
-      value === null ||
-      value === false ||
-      value === ''
-    )
+    const value = options[optionKey];
+    
+    // Skip undefined, null, false, or empty string values
+    if (value === undefined || value === null || value === false || value === '') {
       continue;
-    const config =
-      typeof flagConfig === 'string' ? { flag: flagConfig } : flagConfig;
+    }
+    
+    const config = typeof flagConfig === 'string' 
+      ? { flag: flagConfig, requiresQuotes: false } 
+      : flagConfig;
+    
+    // Handle boolean flags
     if (typeof value === 'boolean' && value === true) {
       args.push(config.flag);
-    } else if (typeof value === 'string') {
+    } 
+    // Handle string values
+    else if (typeof value === 'string') {
       args.push(config.flag, value);
+    }
+    // Handle unexpected types with better error reporting
+    else if (value !== undefined) {
+      console.warn(`Unexpected value type for option ${optionKey}: ${typeof value}`);
     }
   }
 
-  if (options.globalProperties) {
-    Object.entries(options.globalProperties).forEach(([key, value]) => {
-      args.push('--global-property', `${key}=${value}`);
-    });
+  // Handle global properties
+  if (options.globalProperties && typeof options.globalProperties === 'object') {
+    for (const [key, value] of Object.entries(options.globalProperties)) {
+      if (key && value) {
+        args.push('--global-property', `${key}=${value}`);
+      } else {
+        console.warn(`Skipping invalid global property: key="${key}", value="${value}"`);
+      }
+    }
   }
 
   return args;
