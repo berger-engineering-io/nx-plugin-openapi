@@ -7,13 +7,13 @@ describe('GeneratorRegistry', () => {
 
   beforeEach(() => {
     // Reset the singleton instance
-    (GeneratorRegistry as any)._instance = null;
+    (GeneratorRegistry as unknown as { _instance: GeneratorRegistry | null })._instance = null;
     registry = GeneratorRegistry.instance();
   });
 
   afterEach(() => {
     // Clear registry between tests
-    (registry as any).plugins.clear();
+    (registry as unknown as { plugins: Map<string, unknown> }).plugins.clear();
   });
 
   describe('instance', () => {
@@ -25,11 +25,11 @@ describe('GeneratorRegistry', () => {
     });
 
     it('should create new instance if not exists', () => {
-      (GeneratorRegistry as any)._instance = null;
+      (GeneratorRegistry as unknown as { _instance: GeneratorRegistry | null })._instance = null;
       const instance = GeneratorRegistry.instance();
 
       expect(instance).toBeInstanceOf(GeneratorRegistry);
-      expect((GeneratorRegistry as any)._instance).toBe(instance);
+      expect((GeneratorRegistry as unknown as { _instance: GeneratorRegistry | null })._instance).toBe(instance);
     });
   });
 

@@ -30,7 +30,7 @@ describe('plugin-loader', () => {
 
   afterEach(() => {
     // Clear registry between tests
-    (registry as any).plugins.clear();
+    (registry as unknown as { plugins: Map<string, unknown> }).plugins.clear();
   });
 
   describe('loadPlugin', () => {
@@ -164,7 +164,7 @@ describe('plugin-loader', () => {
         'non-existent-plugin',
         () => {
           const error = new Error('Cannot find module');
-          (error as any).code = 'ERR_MODULE_NOT_FOUND';
+          (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
           throw error;
         },
         { virtual: true }

@@ -32,6 +32,12 @@ describe('OpenApiToolsGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     generator = new OpenApiToolsGenerator();
+    // Disable retries for failing tests to make them predictable
+    generator.setRetryOptions({
+      maxAttempts: 1,
+      delayMs: 0,
+      backoffMultiplier: 1,
+    });
     mockContext = {
       root: '/workspace',
       workspaceName: 'test-workspace',
@@ -113,13 +119,21 @@ describe('OpenApiToolsGenerator', () => {
 
         const generatePromise = generator.generate(options, mockContext);
 
-        // Simulate failure
-        process.nextTick(() => mockChildProcess.emit('close', 1));
+        // Simulate failure on all attempts
+        let attemptCount = 0;
+        (spawn as jest.Mock).mockImplementation(() => {
+          attemptCount++;
+          const childProcess = new EventEmitter() as MockChildProcess;
+          childProcess.on = jest.fn(childProcess.on.bind(childProcess));
+          process.nextTick(() => childProcess.emit('close', 1));
+          return childProcess;
+        });
 
         await expect(generatePromise).rejects.toThrow(
-          'OpenAPI Generator exited with code 1'
+          'Failed to generate code after 1 attempts'
         );
-      });
+        expect(attemptCount).toBe(1);
+      }, 10000);
 
       it('should handle process error', async () => {
         const options = {
@@ -129,12 +143,22 @@ describe('OpenApiToolsGenerator', () => {
 
         const generatePromise = generator.generate(options, mockContext);
 
-        // Simulate error
-        const error = new Error('Process error');
-        process.nextTick(() => mockChildProcess.emit('error', error));
+        // Simulate error on all attempts
+        let attemptCount = 0;
+        (spawn as jest.Mock).mockImplementation(() => {
+          attemptCount++;
+          const childProcess = new EventEmitter() as MockChildProcess;
+          childProcess.on = jest.fn(childProcess.on.bind(childProcess));
+          const error = new Error('Process error');
+          process.nextTick(() => childProcess.emit('error', error));
+          return childProcess;
+        });
 
-        await expect(generatePromise).rejects.toThrow('Process error');
-      });
+        await expect(generatePromise).rejects.toThrow(
+          'Failed to generate code after 1 attempts'
+        );
+        expect(attemptCount).toBe(1);
+      }, 10000);
 
       it('should pass generator options correctly', async () => {
         const options = {
@@ -251,14 +275,28 @@ describe('OpenApiToolsGenerator', () => {
 
         const generatePromise = generator.generate(options, mockContext);
 
-        // First succeeds, second fails
-        process.nextTick(() => mockChildProcess.emit('close', 0));
-        setTimeout(() => mockChildProcess.emit('close', 1), 10);
+        // Mock spawn to simulate first succeeding, second failing
+        let callCount = 0;
+        (spawn as jest.Mock).mockImplementation(() => {
+          callCount++;
+          const childProcess = new EventEmitter() as MockChildProcess;
+          childProcess.on = jest.fn(childProcess.on.bind(childProcess));
+          
+          if (callCount === 1) {
+            // First call succeeds
+            process.nextTick(() => childProcess.emit('close', 0));
+          } else {
+            // Subsequent calls fail
+            process.nextTick(() => childProcess.emit('close', 1));
+          }
+          
+          return childProcess;
+        });
 
         await expect(generatePromise).rejects.toThrow(
-          'OpenAPI Generator exited with code 1'
+          'Failed to generate code after 1 attempts'
         );
-      });
+      }, 10000);
 
       it('should maintain service output structure', async () => {
         const options = {
