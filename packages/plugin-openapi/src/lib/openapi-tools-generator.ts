@@ -5,9 +5,9 @@ import {
   GeneratorContext,
   GeneratorPlugin,
   GenerateOptionsBase,
-  logger,
   ExecutionError,
 } from '@nx-plugin-openapi/core';
+import { logger } from '@nx/devkit';
 import {
   buildCommandArgs,
   OpenApiGeneratorOptions,
