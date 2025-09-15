@@ -7,7 +7,8 @@
     "@nx/devkit": "19.8.14"
   },
   "peerDependencies": {
-    "@nx-plugin-openapi/core": ">=0.0.1"
+    "@nx-plugin-openapi/core": ">=0.0.1",
+    "@openapitools/openapi-generator-cli": "^2.20.2"
   },
   "type": "commonjs",
   "main": "./src/index.js",
