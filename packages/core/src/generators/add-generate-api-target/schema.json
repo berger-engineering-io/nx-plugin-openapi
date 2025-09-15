@@ -40,8 +40,8 @@
     "targetName": {
       "type": "string",
       "description": "Custom name for the generate-api target",
-      "default": "generate-api-with-core",
-      "x-prompt": "What name would you like to use for the target? (default: generate-api-with-core)"
+      "default": "generate-api",
+      "x-prompt": "What name would you like to use for the target? (default: generate-api)"
     }
   },
   "required": ["project", "inputSpec", "outputPath"]
