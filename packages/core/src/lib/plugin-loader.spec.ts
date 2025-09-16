@@ -2,6 +2,14 @@ import { GeneratorRegistry } from './registry';
 import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorPlugin } from './interfaces';
 import { loadPlugin } from './plugin-loader';
+import * as autoInstaller from './auto-installer';
+
+// Mock the auto-installer module
+jest.mock('./auto-installer', () => ({
+  installPackages: jest.fn(),
+  detectCi: jest.fn().mockReturnValue(false),
+  detectPackageManager: jest.fn().mockReturnValue('npm'),
+}));
 
 // Mock the dynamic imports
 jest.mock(
@@ -26,6 +34,9 @@ describe('plugin-loader', () => {
     registry = GeneratorRegistry.instance();
     jest.spyOn(registry, 'has');
     jest.spyOn(registry, 'get');
+    // Reset auto-installer mocks
+    (autoInstaller.detectCi as jest.Mock).mockReturnValue(false);
+    (autoInstaller.installPackages as jest.Mock).mockClear();
   });
 
   afterEach(() => {
@@ -248,6 +259,142 @@ describe('plugin-loader', () => {
       await expect(loadPlugin('no-generate-plugin')).rejects.toThrow(
         PluginLoadError
       );
+    });
+
+    describe('auto-installation', () => {
+      it('should attempt auto-installation for missing @nx-plugin-openapi packages', async () => {
+        const mockPlugin = {
+          name: 'plugin-test',
+          generate: jest.fn(),
+        };
+
+        // The module mock will throw on first import, then succeed after "installation"
+        let isInstalled = false;
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-test',
+          () => {
+            if (!isInstalled) {
+              const error = new Error('Cannot find module');
+              (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+              throw error;
+            }
+            return { default: mockPlugin };
+          },
+          { virtual: true }
+        );
+
+        // Mock successful installation that sets the flag
+        (autoInstaller.installPackages as jest.Mock).mockImplementation(() => {
+          isInstalled = true;
+        });
+
+        const result = await loadPlugin('@nx-plugin-openapi/plugin-test');
+
+        expect(autoInstaller.installPackages).toHaveBeenCalledWith(
+          ['@nx-plugin-openapi/plugin-test'],
+          { dev: true }
+        );
+        expect(result).toBe(mockPlugin);
+      });
+
+      it('should not attempt auto-installation in CI environment', async () => {
+        (autoInstaller.detectCi as jest.Mock).mockReturnValue(true);
+
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-ci-test',
+          () => {
+            const error = new Error('Cannot find module');
+            (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+            throw error;
+          },
+          { virtual: true }
+        );
+
+        await expect(
+          loadPlugin('@nx-plugin-openapi/plugin-ci-test')
+        ).rejects.toThrow(PluginNotFoundError);
+
+        expect(autoInstaller.installPackages).not.toHaveBeenCalled();
+      });
+
+      it('should not attempt auto-installation for non-nx-plugin-openapi packages', async () => {
+        jest.doMock(
+          'external-plugin',
+          () => {
+            const error = new Error('Cannot find module');
+            (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+            throw error;
+          },
+          { virtual: true }
+        );
+
+        await expect(loadPlugin('external-plugin')).rejects.toThrow(
+          PluginNotFoundError
+        );
+
+        expect(autoInstaller.installPackages).not.toHaveBeenCalled();
+      });
+
+      it('should handle auto-installation failure gracefully', async () => {
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-fail-test',
+          () => {
+            const error = new Error('Cannot find module');
+            (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+            throw error;
+          },
+          { virtual: true }
+        );
+
+        // Mock installation failure
+        (autoInstaller.installPackages as jest.Mock).mockImplementation(() => {
+          throw new Error('Installation failed');
+        });
+
+        await expect(
+          loadPlugin('@nx-plugin-openapi/plugin-fail-test')
+        ).rejects.toThrow(PluginNotFoundError);
+
+        expect(autoInstaller.installPackages).toHaveBeenCalledWith(
+          ['@nx-plugin-openapi/plugin-fail-test'],
+          { dev: true }
+        );
+      });
+
+      it('should use built-in mapping for auto-installation', async () => {
+        const mockPlugin = {
+          name: 'hey-openapi',
+          generate: jest.fn(),
+        };
+
+        // The module mock will throw on first import, then succeed after "installation"
+        let isInstalled = false;
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-hey-openapi',
+          () => {
+            if (!isInstalled) {
+              const error = new Error('Cannot find module');
+              (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+              throw error;
+            }
+            return { default: mockPlugin };
+          },
+          { virtual: true }
+        );
+
+        // Mock successful installation that sets the flag
+        (autoInstaller.installPackages as jest.Mock).mockImplementation(() => {
+          isInstalled = true;
+        });
+
+        const result = await loadPlugin('hey-openapi');
+
+        expect(autoInstaller.installPackages).toHaveBeenCalledWith(
+          ['@nx-plugin-openapi/plugin-hey-openapi'],
+          { dev: true }
+        );
+        expect(result).toBe(mockPlugin);
+      });
     });
   });
 });
