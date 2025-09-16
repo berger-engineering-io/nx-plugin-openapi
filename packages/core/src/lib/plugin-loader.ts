@@ -3,6 +3,7 @@ import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorRegistry } from './registry';
 import { isGeneratorPlugin } from './type-guards';
 import { logger } from '@nx/devkit';
+import { installPackages, detectCi } from './auto-installer';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
@@ -10,6 +11,23 @@ const BUILTIN_PLUGIN_MAP: Record<string, string> = {
 };
 
 const cache = new Map<string, GeneratorPlugin>();
+
+/**
+ * Helper function to determine if auto-installation should be attempted
+ */
+function shouldTryAutoInstall(error: unknown, packageName: string): boolean {
+  const msg = String(error);
+  const code = (error as Record<string, unknown>)?.['code'];
+  
+  return (
+    // Only for module not found errors
+    (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) &&
+    // Only for known plugin packages
+    packageName.startsWith('@nx-plugin-openapi/') &&
+    // Not in CI environment
+    !detectCi()
+  );
+}
 
 export async function loadPlugin(
   name: string,
@@ -89,7 +107,7 @@ export async function loadPlugin(
       pkg === '@nx-plugin-openapi/plugin-openapi' ||
       pkg === '@nx-plugin-openapi/plugin-hey-openapi'
     ) {
-      const pkgName = pkg.split('/').pop()!; // e.g., 'plugin-openapi' or 'plugin-hey-openapi'
+      const pkgName = pkg.split('/').pop() ?? ''; // e.g., 'plugin-openapi' or 'plugin-hey-openapi'
       const fallbackPaths = [
         `${root}/dist/packages/${pkgName}/src/index.js`,
         `${root}/packages/${pkgName}/src/index.js`,
@@ -114,6 +132,62 @@ export async function loadPlugin(
         } catch (fallbackError) {
           logger.debug(`Failed to load from ${p}: ${fallbackError}`);
         }
+      }
+    }
+
+    // Auto-installation logic
+    if (shouldTryAutoInstall(e, pkg)) {
+      logger.info(`Attempting to auto-install missing plugin: ${pkg}`);
+      try {
+        installPackages([pkg], { dev: true });
+        logger.info(`Successfully installed ${pkg}, retrying import...`);
+        
+        // Retry the import after installation
+        // The module should now be available after installation
+        const retryMod = (await import(pkg)) as {
+          default?: unknown;
+          createPlugin?: unknown;
+          plugin?: unknown;
+          Plugin?: unknown;
+        };
+
+        let candidate: unknown = undefined;
+
+        // Try different export patterns (same as above)
+        if (isGeneratorPlugin(retryMod.default)) {
+          logger.debug(`Found plugin as default export after installation`);
+          candidate = retryMod.default;
+        } else if (typeof retryMod.createPlugin === 'function') {
+          logger.debug(`Found createPlugin factory function after installation`);
+          candidate = (retryMod.createPlugin as () => unknown)();
+        } else if (isGeneratorPlugin(retryMod.plugin)) {
+          logger.debug(`Found plugin as named export 'plugin' after installation`);
+          candidate = retryMod.plugin;
+        } else if (isGeneratorPlugin(retryMod.Plugin)) {
+          logger.debug(`Found plugin as named export 'Plugin' after installation`);
+          candidate = retryMod.Plugin;
+        }
+
+        if (!isGeneratorPlugin(candidate)) {
+          const availableExports = Object.keys(retryMod).filter(
+            (k) => k !== '__esModule'
+          );
+          throw new PluginLoadError(
+            name,
+            new Error(
+              `Module does not export a valid plugin after installation. Available exports: ${availableExports.join(
+                ', '
+              )}`
+            )
+          );
+        }
+
+        logger.info(`Successfully loaded plugin after auto-installation: ${name}`);
+        cache.set(name, candidate);
+        return candidate;
+      } catch (installError) {
+        logger.warn(`Auto-installation failed for ${pkg}: ${installError}`);
+        // Continue to existing error handling
       }
     }
 
