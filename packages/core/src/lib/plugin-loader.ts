@@ -3,7 +3,7 @@ import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorRegistry } from './registry';
 import { isGeneratorPlugin } from './type-guards';
 import { logger } from '@nx/devkit';
-import { installPackages, detectCi } from './auto-installer';
+import { detectCi, installPackages } from './auto-installer';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
@@ -18,7 +18,7 @@ const cache = new Map<string, GeneratorPlugin>();
 function shouldTryAutoInstall(error: unknown, packageName: string): boolean {
   const msg = String(error);
   const code = (error as Record<string, unknown>)?.['code'];
-  
+
   return (
     // Only for module not found errors
     (code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg)) &&
@@ -108,6 +108,8 @@ export async function loadPlugin(
       pkg === '@nx-plugin-openapi/plugin-hey-openapi'
     ) {
       const pkgName = pkg.split('/').pop() ?? ''; // e.g., 'plugin-openapi' or 'plugin-hey-openapi'
+      // TODO remove fallback paths as this is no scenario for published packages.
+      // for local development we should use another strategy
       const fallbackPaths = [
         `${root}/dist/packages/${pkgName}/src/index.js`,
         `${root}/packages/${pkgName}/src/index.js`,
@@ -141,7 +143,7 @@ export async function loadPlugin(
       try {
         installPackages([pkg], { dev: true });
         logger.info(`Successfully installed ${pkg}, retrying import...`);
-        
+
         // Retry the import after installation
         // The module should now be available after installation
         const retryMod = (await import(pkg)) as {
@@ -158,13 +160,19 @@ export async function loadPlugin(
           logger.debug(`Found plugin as default export after installation`);
           candidate = retryMod.default;
         } else if (typeof retryMod.createPlugin === 'function') {
-          logger.debug(`Found createPlugin factory function after installation`);
+          logger.debug(
+            `Found createPlugin factory function after installation`
+          );
           candidate = (retryMod.createPlugin as () => unknown)();
         } else if (isGeneratorPlugin(retryMod.plugin)) {
-          logger.debug(`Found plugin as named export 'plugin' after installation`);
+          logger.debug(
+            `Found plugin as named export 'plugin' after installation`
+          );
           candidate = retryMod.plugin;
         } else if (isGeneratorPlugin(retryMod.Plugin)) {
-          logger.debug(`Found plugin as named export 'Plugin' after installation`);
+          logger.debug(
+            `Found plugin as named export 'Plugin' after installation`
+          );
           candidate = retryMod.Plugin;
         }
 
@@ -182,7 +190,9 @@ export async function loadPlugin(
           );
         }
 
-        logger.info(`Successfully loaded plugin after auto-installation: ${name}`);
+        logger.info(
+          `Successfully loaded plugin after auto-installation: ${name}`
+        );
         cache.set(name, candidate);
         return candidate;
       } catch (installError) {
