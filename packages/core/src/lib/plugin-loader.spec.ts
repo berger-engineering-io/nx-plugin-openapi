@@ -198,48 +198,91 @@ describe('plugin-loader', () => {
       await expect(loadPlugin('error-plugin')).rejects.toThrow(PluginLoadError);
     });
 
-    it('should attempt fallback loading for openapi-tools plugin', async () => {
-      // This test is complex due to dynamic imports, so we'll verify the behavior
-      // by checking that the openapi-tools mapping works
-      const result = await loadPlugin('openapi-tools', {
-        root: '/test/workspace',
-      });
+    it('should attempt fallback loading for openapi-tools plugin in local development', async () => {
+      // Set up local development environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
 
-      expect(result).toBeDefined();
-      expect(result.generate).toBeDefined();
+      try {
+        const result = await loadPlugin('openapi-tools', {
+          root: '/test/workspace',
+        });
+
+        expect(result).toBeDefined();
+        expect(result.generate).toBeDefined();
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
 
-    it('should exclude TS source paths from fallback candidates', () => {
-      // This test verifies that the fallback candidate logic doesn't include TS files
-      // by inspecting the plugin-loader source code logic
-      
-      // We'll test this by examining the behavior when the main import fails
-      // and verify that only JS paths are attempted
-      const testCandidates = [];
-      const mockRoot = '/test/workspace';
-      const pkg = '@nx-plugin-openapi/plugin-openapi';
-      
-      // Simulate the candidate generation logic from plugin-loader.ts
-      if (pkg === '@nx-plugin-openapi/plugin-openapi') {
-        testCandidates.push(
-          `${mockRoot}/dist/packages/plugin-openapi/src/index.js`,
-          `${mockRoot}/packages/plugin-openapi/src/index.js`
-        );
+    it('should not attempt fallback loading in production', async () => {
+      // Set up production environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      // Mock the module to not be found
+      jest.doMock(
+        '@nx-plugin-openapi/plugin-prod-test',
+        () => {
+          const error = new Error('Cannot find module');
+          (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+          throw error;
+        },
+        { virtual: true }
+      );
+
+      try {
+        await expect(
+          loadPlugin('@nx-plugin-openapi/plugin-prod-test', {
+            root: '/test/workspace',
+          })
+        ).rejects.toThrow(PluginNotFoundError);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
       }
-      
-      // Verify that candidates only include JS files, not TS files
-      expect(testCandidates).toHaveLength(2);
-      expect(testCandidates[0]).toMatch(/\.js$/);
-      expect(testCandidates[1]).toMatch(/\.js$/);
-      
-      // Verify no TS paths are included
-      const tsFiles = testCandidates.filter(path => path.endsWith('.ts'));
-      expect(tsFiles).toHaveLength(0);
-      
-      // Verify the correct order: dist JS first, then source JS
-      expect(testCandidates[0]).toContain('/dist/packages/plugin-openapi/src/index.js');
-      expect(testCandidates[1]).toContain('/packages/plugin-openapi/src/index.js');
-      expect(testCandidates[0]).not.toEqual(testCandidates[1]); // Should be different paths
+    });
+
+    it('should exclude TS source paths from fallback candidates in local dev', () => {
+      // Set up local development environment
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      try {
+        // This test verifies that the fallback candidate logic doesn't include TS files
+        // by inspecting the plugin-loader source code logic
+
+        // We'll test this by examining the behavior when the main import fails
+        // and verify that only JS paths are attempted
+        const testCandidates = [];
+        const mockRoot = '/test/workspace';
+        const pkg = '@nx-plugin-openapi/plugin-openapi';
+
+        // Simulate the candidate generation logic from plugin-loader.ts
+        // Only in local development mode
+        const isLocalDev = process.env.NODE_ENV === 'development';
+        if (isLocalDev && pkg === '@nx-plugin-openapi/plugin-openapi') {
+          testCandidates.push(
+            `${mockRoot}/dist/packages/plugin-openapi/src/index.js`,
+            `${mockRoot}/packages/plugin-openapi/src/index.js`
+          );
+        }
+
+        // Verify that candidates only include JS files, not TS files
+        expect(testCandidates).toHaveLength(2);
+        expect(testCandidates[0]).toMatch(/\.js$/);
+        expect(testCandidates[1]).toMatch(/\.js$/);
+
+        // Verify no TS paths are included
+        const tsFiles = testCandidates.filter(path => path.endsWith('.ts'));
+        expect(tsFiles).toHaveLength(0);
+
+        // Verify the correct order: dist JS first, then source JS
+        expect(testCandidates[0]).toContain('/dist/packages/plugin-openapi/src/index.js');
+        expect(testCandidates[1]).toContain('/packages/plugin-openapi/src/index.js');
+        expect(testCandidates[0]).not.toEqual(testCandidates[1]); // Should be different paths
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
 
     it('should validate plugin has generate function', async () => {
@@ -262,7 +305,7 @@ describe('plugin-loader', () => {
     });
 
     describe('auto-installation', () => {
-      it('should attempt auto-installation for missing @nx-plugin-openapi packages', async () => {
+      it('should attempt auto-installation for missing @nx-plugin-openapi packages after node_modules check', async () => {
         const mockPlugin = {
           name: 'plugin-test',
           generate: jest.fn(),
@@ -393,6 +436,26 @@ describe('plugin-loader', () => {
           ['@nx-plugin-openapi/plugin-hey-openapi'],
           { dev: true }
         );
+        expect(result).toBe(mockPlugin);
+      });
+
+      it('should check node_modules before attempting auto-installation', async () => {
+        const mockPlugin = {
+          name: 'already-installed',
+          generate: jest.fn(),
+        };
+
+        // Mock as if the module is already installed
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-already-installed',
+          () => ({ default: mockPlugin }),
+          { virtual: true }
+        );
+
+        const result = await loadPlugin('@nx-plugin-openapi/plugin-already-installed');
+
+        // Should NOT attempt installation since it's already available
+        expect(autoInstaller.installPackages).not.toHaveBeenCalled();
         expect(result).toBe(mockPlugin);
       });
     });
