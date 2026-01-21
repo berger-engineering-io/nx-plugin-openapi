@@ -5,11 +5,32 @@ description: Learn about the Nx Plugin OpenAPI and what it can do for your proje
 
 # Overview
 
-The Nx Plugin OpenAPI brings first class support for using the [OpenAPI Generator](https://openapi-generator.tech) within your Nx workspace leveraging all powerful features of the Nx task pipeline.
+The Nx Plugin OpenAPI brings first-class support for generating API client code from OpenAPI specifications within your Nx workspace, leveraging all the powerful features of the Nx task pipeline.
 
-## What is OpenAPI Generator?
+## Plugin Architecture
 
-[OpenAPI Generator](https://openapi-generator.tech) is a powerful tool that can generate API client libraries, server stubs, documentation, and configuration files from OpenAPI specifications. This plugin specifically focuses on generating TypeScript Angular clients.
+The project is structured as a modular plugin system, allowing you to choose the code generator that best fits your needs:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   @nx-plugin-openapi/core                    │
+│       Executor, Plugin Loader, Auto-Installation             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┴───────────────────┐
+          ▼                                       ▼
+┌────────────────────────┐           ┌────────────────────────┐
+│   plugin-openapi       │           │   plugin-hey-api       │
+│   (OpenAPI Generator)  │           │   (hey-api/openapi-ts) │
+└────────────────────────┘           └────────────────────────┘
+```
+
+### Available Generators
+
+| Generator | Plugin | Description |
+|-----------|--------|-------------|
+| `openapi-tools` | `@nx-plugin-openapi/plugin-openapi` | Uses [OpenAPI Generator](https://openapi-generator.tech) - supports 50+ languages including TypeScript Angular |
+| `hey-api` | `@nx-plugin-openapi/plugin-hey-api` | Uses [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) - modern TypeScript-first client generation |
 
 ## Key Benefits
 
@@ -25,12 +46,34 @@ The Nx Plugin OpenAPI brings first class support for using the [OpenAPI Generato
 - Caches based on file content, not timestamps
 - Dramatically speeds up builds in large monorepos
 
-### 🔧 **Flexible Configuration**
-- Support for Generator options
-- TypeScript-safe configuration through JSON schema
+### 🔧 **Flexible Plugin System**
+- Choose the generator that fits your project needs
+- Plugins are auto-installed when first used
+- Pass generator-specific options via `generatorOptions`
+- Support for multiple OpenAPI specifications in a single target
 
 ### 📦 **Production Ready**
-- We rely on the battle-proven [OpenAPI Generator](https://openapi-generator.tech/docs/generators/typescript-angular) for generating Angular TypeScript clients which does power thousands of production applications.
+- Battle-tested generators used in thousands of production applications
+- Comprehensive configuration options for customization
+- TypeScript-safe configuration through JSON schema
+
+## Choosing a Generator
+
+### OpenAPI Generator (`openapi-tools`)
+
+Best for:
+- Angular applications needing injectable services
+- Projects requiring specific OpenAPI Generator templates
+- Teams familiar with OpenAPI Generator ecosystem
+- Supporting multiple languages/frameworks
+
+### hey-api (`hey-api`)
+
+Best for:
+- Modern TypeScript/JavaScript projects
+- Projects prioritizing type safety
+- Fetch-based HTTP clients
+- Simpler, more lightweight generated code
 
 ## Next Steps
 

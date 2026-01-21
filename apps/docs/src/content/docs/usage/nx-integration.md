@@ -17,7 +17,7 @@ Make your build process depend on API generation:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src"
@@ -58,7 +58,7 @@ Configure default behavior for all `generate-api` targets in your workspace:
 {
   "targetDefaults": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "cache": true,
       "inputs": [
         "{projectRoot}/swagger.json",
@@ -112,7 +112,7 @@ For remote OpenAPI specifications, the executor automatically handles caching ba
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "https://api.example.com/swagger.json",
         "outputPath": "libs/api-client/src"
@@ -135,7 +135,7 @@ Specify outputs for proper caching:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src"
@@ -214,14 +214,14 @@ Set up complex generation pipelines:
 {
   "targets": {
     "generate-types": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "shared/specs/types.yaml",
         "outputPath": "libs/shared-types/src"
       }
     },
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "dependsOn": ["generate-types"],
       "options": {
         "inputSpec": "apps/my-app/swagger.json",
@@ -243,10 +243,10 @@ Generate multiple API clients in parallel:
 {
   "targetDefaults": {
     "generate-user-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api"
+      "executor": "@nx-plugin-openapi/core:generate-api"
     },
     "generate-product-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api"
+      "executor": "@nx-plugin-openapi/core:generate-api"
     },
     "generate-all-apis": {
       "executor": "nx:run-commands",
@@ -270,7 +270,7 @@ Use environment variables for conditional generation:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src"

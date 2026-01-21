@@ -5,7 +5,7 @@ description: Complete reference for the generate-api executor
 
 # generate-api Executor
 
-The `generate-api` executor generates TypeScript Angular API client code from OpenAPI specifications using the OpenAPI Generator.
+The `generate-api` executor generates API client code from OpenAPI specifications using your choice of generator plugin.
 
 ## Usage
 
@@ -19,8 +19,9 @@ nx run <project>:generate-api
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src"
       }
@@ -29,7 +30,33 @@ nx run <project>:generate-api
 }
 ```
 
-## Required Options
+## Core Options
+
+These options are available for all generator plugins.
+
+### `generator`
+
+- **Type:** `string`
+- **Default:** `"openapi-tools"`
+- **Required:** No
+- **Description:** Specifies which generator plugin to use
+
+**Available values:**
+- `"openapi-tools"` - Uses OpenAPI Generator CLI (`@openapitools/openapi-generator-cli`)
+- `"hey-api"` - Uses hey-api (`@hey-api/openapi-ts`)
+
+**Examples:**
+```json
+{
+  "generator": "openapi-tools"
+}
+```
+
+```json
+{
+  "generator": "hey-api"
+}
+```
 
 ### `inputSpec`
 
@@ -108,7 +135,43 @@ The output directory will be cleaned before generation. Relative paths are resol
 }
 ```
 
-## Optional Configuration Options
+### `generatorOptions`
+
+- **Type:** `object`
+- **Default:** `{}`
+- **Required:** No
+- **Description:** Plugin-specific options passed to the generator
+
+This object allows you to pass options specific to the selected generator. The available options depend on which generator you're using.
+
+**Example for OpenAPI Generator:**
+```json
+{
+  "generatorOptions": {
+    "configFile": "apps/my-app/openapi-config.json",
+    "skipValidateSpec": true,
+    "globalProperties": {
+      "supportsES6": "true"
+    }
+  }
+}
+```
+
+**Example for hey-api:**
+```json
+{
+  "generatorOptions": {
+    "client": "fetch",
+    "plugins": ["@hey-api/schemas"]
+  }
+}
+```
+
+---
+
+## OpenAPI Generator Options
+
+The following options apply when using `generator: "openapi-tools"`. They can be specified directly in `options` or within `generatorOptions`.
 
 ### `configFile`
 
@@ -538,7 +601,7 @@ Here's a comprehensive example showing many options:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src",
@@ -571,7 +634,7 @@ For microservice architectures:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": {
           "auth-service": "apis/auth-service.yaml",
@@ -616,7 +679,7 @@ Use configurations for different environments:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src"
@@ -639,4 +702,72 @@ Use configurations for different environments:
 Run with configuration:
 ```bash
 nx run demo:generate-api:development
+```
+
+---
+
+## hey-api Generator Options
+
+The following options apply when using `generator: "hey-api"`. Pass them via `generatorOptions`.
+
+### Common hey-api Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `client` | string | HTTP client to use (`"fetch"`, `"axios"`, etc.) |
+| `plugins` | array | Array of plugins to enable |
+| `schemas` | object | Schema generation configuration |
+| `services` | object | Service generation configuration |
+| `types` | object | Type generation configuration |
+
+For a complete list of options, see the [hey-api documentation](https://heyapi.dev/).
+
+### hey-api Example
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": "apps/demo/openapi.yaml",
+        "outputPath": "libs/api-client/src",
+        "generatorOptions": {
+          "client": "fetch",
+          "plugins": [
+            "@hey-api/schemas",
+            "@hey-api/services",
+            "@hey-api/types"
+          ]
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    }
+  }
+}
+```
+
+### hey-api Multiple Services Example
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": {
+          "users": "apis/users-api.yaml",
+          "products": "apis/products-api.yaml"
+        },
+        "outputPath": "libs/api-clients/src",
+        "generatorOptions": {
+          "client": "axios"
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    }
+  }
+}
 ```
