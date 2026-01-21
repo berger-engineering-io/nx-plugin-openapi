@@ -7,25 +7,25 @@ import {
   GenerateOptionsBase,
 } from '@nx-plugin-openapi/core';
 
-export interface HeyOpenApiOptions {
+export interface HeyApiOptions {
   [key: string]: unknown;
 }
 
-export class HeyOpenApiGenerator
+export class HeyApiGenerator
   extends BaseGenerator
-  implements GeneratorPlugin<HeyOpenApiOptions>
+  implements GeneratorPlugin<HeyApiOptions>
 {
-  readonly name = 'hey-openapi';
+  readonly name = 'hey-api';
 
   async generate(
-    options: HeyOpenApiOptions & GenerateOptionsBase,
+    options: HeyApiOptions & GenerateOptionsBase,
     ctx: GeneratorContext
   ): Promise<void> {
     const { inputSpec, outputPath } = options;
     const generatorOptions = (options.generatorOptions ||
-      {}) as Partial<HeyOpenApiOptions>;
+      {}) as Partial<HeyApiOptions>;
 
-    logger.info(`Starting hey-openapi code generation`);
+    logger.info(`Starting hey-api code generation`);
     logger.debug(`Input spec: ${JSON.stringify(inputSpec)}`);
     logger.debug(`Output path: ${outputPath}`);
 
@@ -56,7 +56,7 @@ export class HeyOpenApiGenerator
       }
     }
 
-    logger.info(`hey-openapi code generation completed successfully`);
+    logger.info(`hey-api code generation completed successfully`);
   }
 
   private async invokeOpenApiTs(
@@ -97,4 +97,4 @@ export class HeyOpenApiGenerator
   }
 }
 
-export default new HeyOpenApiGenerator();
+export default new HeyApiGenerator();

@@ -406,14 +406,14 @@ describe('plugin-loader', () => {
 
       it('should use built-in mapping for auto-installation', async () => {
         const mockPlugin = {
-          name: 'hey-openapi',
+          name: 'hey-api',
           generate: jest.fn(),
         };
 
         // The module mock will throw on first import, then succeed after "installation"
         let isInstalled = false;
         jest.doMock(
-          '@nx-plugin-openapi/plugin-hey-openapi',
+          '@nx-plugin-openapi/plugin-hey-api',
           () => {
             if (!isInstalled) {
               const error = new Error('Cannot find module');
@@ -430,10 +430,10 @@ describe('plugin-loader', () => {
           isInstalled = true;
         });
 
-        const result = await loadPlugin('hey-openapi');
+        const result = await loadPlugin('hey-api');
 
         expect(autoInstaller.installPackages).toHaveBeenCalledWith(
-          ['@nx-plugin-openapi/plugin-hey-openapi'],
+          ['@nx-plugin-openapi/plugin-hey-api'],
           { dev: true }
         );
         expect(result).toBe(mockPlugin);

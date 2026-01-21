@@ -8,7 +8,7 @@ import { isLocalDev } from './utils/is-local-dev';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
-  'hey-openapi': '@nx-plugin-openapi/plugin-hey-openapi',
+  'hey-api': '@nx-plugin-openapi/plugin-hey-api',
 };
 
 const cache = new Map<string, GeneratorPlugin>();
@@ -143,7 +143,7 @@ export async function loadPlugin(
     if (
       isLocal &&
       (pkg === '@nx-plugin-openapi/plugin-openapi' ||
-        pkg === '@nx-plugin-openapi/plugin-hey-openapi')
+        pkg === '@nx-plugin-openapi/plugin-hey-api')
     ) {
       const pkgName = pkg.split('/').pop() ?? '';
       const fallbackPaths = [

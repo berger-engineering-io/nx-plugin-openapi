@@ -1,4 +1,4 @@
-import { HeyOpenApiGenerator } from './hey-openapi-generator';
+import { HeyApiGenerator } from './hey-api-generator';
 import { GeneratorContext } from '@nx-plugin-openapi/core';
 
 jest.mock(
@@ -9,14 +9,14 @@ jest.mock(
   { virtual: true }
 );
 
-describe('HeyOpenApiGenerator', () => {
-  let generator: HeyOpenApiGenerator;
+describe('HeyApiGenerator', () => {
+  let generator: HeyApiGenerator;
   let mockContext: GeneratorContext;
   let cleanOutputSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    generator = new HeyOpenApiGenerator();
+    generator = new HeyApiGenerator();
     mockContext = { root: '/workspace', workspaceName: 'test' };
     // Spy on cleanOutput inherited from BaseGenerator
     cleanOutputSpy = jest
@@ -28,7 +28,7 @@ describe('HeyOpenApiGenerator', () => {
   });
 
   it('should have correct plugin name', () => {
-    expect(generator.name).toBe('hey-openapi');
+    expect(generator.name).toBe('hey-api');
   });
 
   it('should call openapi-ts generate for single spec', async () => {
@@ -41,7 +41,7 @@ describe('HeyOpenApiGenerator', () => {
         inputSpec: 'api.yaml',
         outputPath: 'src/generated',
         generatorOptions: { client: 'fetch' },
-      } as unknown as Parameters<HeyOpenApiGenerator['generate']>[0],
+      } as unknown as Parameters<HeyApiGenerator['generate']>[0],
       mockContext
     );
 
@@ -64,7 +64,7 @@ describe('HeyOpenApiGenerator', () => {
       {
         inputSpec: { users: 'users.yaml', products: 'products.yaml' },
         outputPath: 'src/api',
-      } as unknown as Parameters<HeyOpenApiGenerator['generate']>[0],
+      } as unknown as Parameters<HeyApiGenerator['generate']>[0],
       mockContext
     );
 
