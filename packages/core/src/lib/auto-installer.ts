@@ -1,26 +1,23 @@
 import { execSync } from 'node:child_process';
+import {
+  detectPackageManager as nxDetectPackageManager,
+  getPackageManagerCommand,
+  type PackageManager,
+} from '@nx/devkit';
 
-export type PackageManager = 'npm' | 'pnpm' | 'yarn';
+export type { PackageManager };
 
 export function detectCi(): boolean {
   return Boolean(process.env['CI']);
 }
 
+/**
+ * Detects the package manager used by the project.
+ * Uses @nx/devkit which properly checks lock files (pnpm-lock.yaml, yarn.lock, package-lock.json)
+ * and the packageManager field in package.json.
+ */
 export function detectPackageManager(): PackageManager {
-  // Minimal heuristic; can be expanded later
-  try {
-    execSync('pnpm -v', { stdio: 'ignore' });
-    return 'pnpm';
-  } catch {
-    /* noop */
-  }
-  try {
-    execSync('yarn -v', { stdio: 'ignore' });
-    return 'yarn';
-  } catch {
-    /* noop */
-  }
-  return 'npm';
+  return nxDetectPackageManager();
 }
 
 export function installPackages(
@@ -29,15 +26,10 @@ export function installPackages(
 ): void {
   if (pkgs.length === 0) return;
 
-  const pm = detectPackageManager();
+  const pmc = getPackageManagerCommand();
   const dev = opts?.dev ?? true;
-  const devFlag = dev ? (pm === 'yarn' ? '-D' : '--save-dev') : '';
-  const cmd =
-    pm === 'pnpm'
-      ? `pnpm add ${dev ? '-D ' : ''}${pkgs.join(' ')}`
-      : pm === 'yarn'
-      ? `yarn add ${dev ? '-D ' : ''}${pkgs.join(' ')}`
-      : `npm install ${devFlag} ${pkgs.join(' ')}`;
+  const cmd = `${dev ? pmc.addDev : pmc.add} ${pkgs.join(' ')}`;
+
   if (!detectCi()) {
     try {
       execSync(cmd, { stdio: 'inherit' });
