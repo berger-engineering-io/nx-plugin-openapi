@@ -70,26 +70,31 @@ For this example, we'll use a local file. Create a simple OpenAPI spec:
 
 Add the `generate-api` executor to your project's `project.json`.
 
-Automatically using the Nx CLI:
+### Using the Generator (Recommended)
+
+The easiest way is to use the interactive generator:
 
 ```bash
-nx generate @lambda-solutions/nx-plugin-openapi:add-generate-api-target
+nx generate @nx-plugin-openapi/core:add-generate-api-target --project=my-app
 ```
 
-The generator will walk you through the configuration.
+The generator will walk you through the configuration options.
+
+### Manual Configuration
 
 You can also manually add the executor configuration to your `project.json` file:
 
-```bash
+#### Using OpenAPI Generator (openapi-tools)
 
 ```json title="apps/my-app/project.json"
 {
   "name": "my-app",
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
-        "inputSpec": "apps/my-app/api.json",
+        "generator": "openapi-tools",
+        "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "apps/my-app/src/app/api"
       },
       "outputs": ["{options.outputPath}"]
@@ -100,6 +105,33 @@ You can also manually add the executor configuration to your `project.json` file
   }
 }
 ```
+
+#### Using hey-api
+
+```json title="apps/my-app/project.json"
+{
+  "name": "my-app",
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": "apps/my-app/swagger.json",
+        "outputPath": "apps/my-app/src/app/api"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "dependsOn": ["generate-api"]
+    }
+  }
+}
+```
+
+:::tip[Generator Selection]
+- **`openapi-tools`**: Best for Angular projects needing injectable services, or when using OpenAPI Generator's extensive template ecosystem.
+- **`hey-api`**: Best for modern TypeScript projects wanting simpler, more type-safe generated code.
+:::
 
 
 
@@ -121,7 +153,9 @@ You should see output similar to:
 
 ## Step 4: Examine the Generated Code
 
-The plugin will generate TypeScript Angular code in your specified output directory:
+The generated code structure varies based on the generator you chose:
+
+### OpenAPI Generator (openapi-tools) Output
 
 ```
 libs/api-client/src/
@@ -138,8 +172,20 @@ libs/api-client/src/
 └── variables.ts
 ```
 
+### hey-api Output
 
-
+```
+libs/api-client/src/
+├── client/
+│   └── client.ts
+├── schemas/
+│   └── ...
+├── services/
+│   └── ...
+├── types/
+│   └── ...
+└── index.ts
+```
 
 ## Step 5: Set Up Nx Integration (Optional)
 
@@ -152,8 +198,8 @@ For better integration with Nx's build system, configure target defaults in your
       "cache": true,
       "inputs": [
         "{projectRoot}/swagger.json",
-        "{projectRoot}/openapitools.json",
-        "{projectRoot}/api-config.json"
+        "{projectRoot}/openapi.yaml",
+        "{projectRoot}/openapi-config.json"
       ]
     },
     "build": {
@@ -169,7 +215,11 @@ This configuration:
 - Includes relevant input files for cache invalidation
 
 ## Step 6: Use the Generated Client
-We recommend now to jump to the official documentation from OpenApiTools on how to use the generated client in your Angular application: [Using the Generated Client](https://openapi-generator.tech/docs/generators/typescript-angular#using-the-generated-client).
+
+The usage of the generated client depends on which generator you chose:
+
+- **OpenAPI Generator**: See the [official documentation](https://openapi-generator.tech/docs/generators/typescript-angular#using-the-generated-client) for Angular integration.
+- **hey-api**: See the [hey-api documentation](https://heyapi.dev/) for usage examples.
 
 ## Next Steps
 
@@ -181,7 +231,17 @@ Congratulations! You've successfully generated your first API client. Here's wha
 
 ## Common Issues
 
-### Generator Not Found
+### Plugin Not Found
+
+If you see an error about a plugin not being found, ensure the plugin package is installed:
+
+```bash
+# For openapi-tools
+npm install --save-dev @nx-plugin-openapi/plugin-openapi @openapitools/openapi-generator-cli
+
+# For hey-api
+npm install --save-dev @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
+```
 
 ### Output Directory Conflicts
 

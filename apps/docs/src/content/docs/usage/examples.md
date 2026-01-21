@@ -5,21 +5,42 @@ description: Common usage patterns and examples for the generate-api executor
 
 # Examples
 
-This page provides practical examples for common use cases with the `generate-api` executor.
+This page provides practical examples for common use cases with the `generate-api` executor. Examples are provided for both the OpenAPI Generator (`openapi-tools`) and hey-api (`hey-api`) generators.
 
 ## Basic Examples
 
-### Local OpenAPI Specification
+### Local OpenAPI Specification (OpenAPI Generator)
 
-Generate an API client from a local OpenAPI specification file:
+Generate an API client from a local OpenAPI specification file using OpenAPI Generator:
 
 ```json title="project.json"
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "apps/demo/swagger.json",
+        "outputPath": "apps/demo/src/app/api"
+      },
+      "outputs": ["{options.outputPath}"]
+    }
+  }
+}
+```
+
+### Local OpenAPI Specification (hey-api)
+
+Generate an API client using hey-api:
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": "apps/demo/openapi.yaml",
         "outputPath": "apps/demo/src/app/api"
       },
       "outputs": ["{options.outputPath}"]
@@ -30,14 +51,15 @@ Generate an API client from a local OpenAPI specification file:
 
 ### Remote OpenAPI Specification
 
-Generate from a remote URL:
+Generate from a remote URL (works with both generators):
 
 ```json title="project.json"
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "https://api.example.com/swagger.json",
         "outputPath": "apps/demo/src/app/api"
       }
@@ -74,7 +96,7 @@ Use a separate configuration file for detailed OpenAPI Generator options:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/openapi.json",
         "outputPath": "apps/demo/src/app/api"
@@ -95,7 +117,7 @@ Generate with custom package information and naming:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src",
@@ -117,7 +139,7 @@ Use global properties for fine-tuned control:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src",
@@ -144,7 +166,7 @@ Access protected OpenAPI specifications:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "https://api.example.com/swagger.json",
         "outputPath": "libs/api-client/src",
@@ -164,7 +186,7 @@ Use custom templates for code generation:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src",
@@ -186,7 +208,7 @@ Configure different behaviors for different environments:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src"
@@ -234,7 +256,7 @@ Generate multiple API clients from different specifications:
 {
   "targets": {
     "generate-user-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/user-api.json",
         "outputPath": "libs/user-api-client/src",
@@ -242,7 +264,7 @@ Generate multiple API clients from different specifications:
       }
     },
     "generate-product-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "apps/demo/product-api.json",
         "outputPath": "libs/product-api-client/src",
@@ -274,7 +296,7 @@ Generate a shared API client library used across multiple apps:
   "name": "shared-api-client",
   "targets": {
     "generate": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
         "inputSpec": "https://api.company.com/swagger.json",
         "outputPath": "libs/shared-api-client/src/lib/generated",
@@ -300,7 +322,7 @@ Configure API generation at the workspace level in `nx.json`:
 {
   "targetDefaults": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "cache": true,
       "inputs": [
         "{projectRoot}/swagger.json",
@@ -316,9 +338,73 @@ Configure API generation at the workspace level in `nx.json`:
 }
 ```
 
+## hey-api Specific Examples
+
+### Basic hey-api Configuration
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": "apps/demo/openapi.yaml",
+        "outputPath": "libs/api-client/src",
+        "generatorOptions": {
+          "client": "fetch"
+        }
+      },
+      "outputs": ["{options.outputPath}"]
+    }
+  }
+}
+```
+
+### hey-api with Custom Plugins
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": "apps/demo/openapi.yaml",
+        "outputPath": "libs/api-client/src",
+        "generatorOptions": {
+          "client": "axios",
+          "plugins": ["@hey-api/schemas", "@hey-api/services"]
+        }
+      }
+    }
+  }
+}
+```
+
+### hey-api with Multiple Services
+
+```json title="project.json"
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@nx-plugin-openapi/core:generate-api",
+      "options": {
+        "generator": "hey-api",
+        "inputSpec": {
+          "users-api": "apis/users-openapi.yaml",
+          "products-api": "apis/products-openapi.yaml"
+        },
+        "outputPath": "libs/api-clients/src"
+      }
+    }
+  }
+}
+```
+
 ## Troubleshooting Examples
 
-### Debug Generation Issues
+### Debug Generation Issues (OpenAPI Generator)
 
 Use dry run to test configuration without generating files:
 
@@ -326,8 +412,9 @@ Use dry run to test configuration without generating files:
 {
   "targets": {
     "debug-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "apps/demo/swagger.json",
         "outputPath": "libs/api-client/src",
         "dryRun": true,
@@ -338,7 +425,7 @@ Use dry run to test configuration without generating files:
 }
 ```
 
-### Handle Large APIs
+### Handle Large APIs (OpenAPI Generator)
 
 For large OpenAPI specifications, optimize generation:
 
@@ -346,8 +433,9 @@ For large OpenAPI specifications, optimize generation:
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "apps/demo/large-api.json",
         "outputPath": "libs/api-client/src",
         "skipValidateSpec": true,

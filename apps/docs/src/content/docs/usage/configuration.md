@@ -4,21 +4,20 @@ description: Learn how to configure the generate-api executor with all available
 ---
 
 # Configuration
-See [OpenApiTools docs](https://openapi-generator.tech/docs/usage/#generate) for all options.
-
 
 The `generate-api` executor offers extensive configuration options to customize the generated API client code. This page covers all available configuration options and how to use them effectively.
 
 ## Basic Configuration
 
-At minimum, you need to specify the input specification and output path:
+At minimum, you need to specify the generator, input specification, and output path:
 
 ```json title="project.json"
 {
   "targets": {
     "generate-api": {
-      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
+        "generator": "openapi-tools",
         "inputSpec": "apps/my-app/swagger.json",
         "outputPath": "libs/api-client/src"
       }
@@ -27,14 +26,55 @@ At minimum, you need to specify the input specification and output path:
 }
 ```
 
-## Required Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `inputSpec` | string | Path to the OpenAPI specification file (local file or URL) |
-| `outputPath` | string | Output directory for the generated client |
-
 ## Core Options
+
+These options are available for all generators:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `generator` | string | `"openapi-tools"` | Generator plugin to use (`"openapi-tools"` or `"hey-api"`) |
+| `inputSpec` | string \| object | *required* | Path to the OpenAPI specification file (local file or URL), or an object for multiple specs |
+| `outputPath` | string | *required* | Output directory for the generated client |
+| `generatorOptions` | object | `{}` | Plugin-specific options passed to the generator |
+
+## Generator Selection
+
+### `generator`
+
+Specifies which generator plugin to use:
+
+```json
+{
+  "generator": "openapi-tools"
+}
+```
+
+Available values:
+- `"openapi-tools"` - Uses OpenAPI Generator CLI (default)
+- `"hey-api"` - Uses hey-api/openapi-ts
+
+## Plugin-Specific Options
+
+Each generator has its own set of options. Pass them via the `generatorOptions` property or directly in the options object.
+
+### OpenAPI Generator Options
+
+See [OpenAPI Generator docs](https://openapi-generator.tech/docs/usage/#generate) for all available options.
+
+### hey-api Options
+
+See [hey-api documentation](https://heyapi.dev/) for configuration options. Common options include:
+- `client` - HTTP client to use (e.g., `"fetch"`, `"axios"`)
+- `plugins` - Array of plugins to enable
+- `schemas` - Schema generation options
+
+---
+
+## Detailed Options (OpenAPI Generator)
+
+The following options apply when using `generator: "openapi-tools"`. They can be specified directly in `options` or within `generatorOptions`.
+
+### Core Options
 
 ### `configFile`
 ```json
@@ -284,7 +324,7 @@ Then reference it:
 ```json title="project.json"
 {
   "generate-api": {
-    "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+    "executor": "@nx-plugin-openapi/core:generate-api",
     "options": {
       "inputSpec": "apps/my-app/swagger.json",
       "outputPath": "libs/api-client/src",
@@ -301,7 +341,7 @@ You can use different configurations for different environments:
 ```json title="project.json"
 {
   "generate-api": {
-    "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+    "executor": "@nx-plugin-openapi/core:generate-api",
     "options": {
       "inputSpec": "apps/my-app/swagger.json",
       "outputPath": "libs/api-client/src"
