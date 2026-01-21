@@ -305,7 +305,7 @@ describe('plugin-loader', () => {
     });
 
     describe('auto-installation', () => {
-      it('should attempt auto-installation for missing @nx-plugin-openapi packages after node_modules check', async () => {
+      it('should attempt auto-installation for missing @nx-plugin-openapi packages when skipPrompt is true', async () => {
         const mockPlugin = {
           name: 'plugin-test',
           generate: jest.fn(),
@@ -331,13 +331,37 @@ describe('plugin-loader', () => {
           isInstalled = true;
         });
 
-        const result = await loadPlugin('@nx-plugin-openapi/plugin-test');
+        // Use skipPrompt: true to bypass the interactive prompt in tests
+        const result = await loadPlugin('@nx-plugin-openapi/plugin-test', {
+          skipPrompt: true,
+        });
 
         expect(autoInstaller.installPackages).toHaveBeenCalledWith(
           ['@nx-plugin-openapi/plugin-test'],
           { dev: true }
         );
         expect(result).toBe(mockPlugin);
+      });
+
+      it('should skip auto-installation in non-interactive environments without skipPrompt', async () => {
+        // In test environment, process.stdin.isTTY is false, so prompt should be skipped
+        // and installation should not proceed
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-non-tty-test',
+          () => {
+            const error = new Error('Cannot find module');
+            (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+            throw error;
+          },
+          { virtual: true }
+        );
+
+        await expect(
+          loadPlugin('@nx-plugin-openapi/plugin-non-tty-test')
+        ).rejects.toThrow(PluginNotFoundError);
+
+        // Installation should NOT be called because prompt returned false
+        expect(autoInstaller.installPackages).not.toHaveBeenCalled();
       });
 
       it('should not attempt auto-installation in CI environment', async () => {
@@ -395,7 +419,7 @@ describe('plugin-loader', () => {
         });
 
         await expect(
-          loadPlugin('@nx-plugin-openapi/plugin-fail-test')
+          loadPlugin('@nx-plugin-openapi/plugin-fail-test', { skipPrompt: true })
         ).rejects.toThrow(PluginNotFoundError);
 
         expect(autoInstaller.installPackages).toHaveBeenCalledWith(
@@ -430,13 +454,50 @@ describe('plugin-loader', () => {
           isInstalled = true;
         });
 
-        const result = await loadPlugin('hey-api');
+        const result = await loadPlugin('hey-api', { skipPrompt: true });
 
         expect(autoInstaller.installPackages).toHaveBeenCalledWith(
           ['@nx-plugin-openapi/plugin-hey-api'],
           { dev: true }
         );
         expect(result).toBe(mockPlugin);
+      });
+
+      it('should log the detected package manager when installing', async () => {
+        const mockPlugin = {
+          name: 'plugin-pm-log',
+          generate: jest.fn(),
+        };
+
+        let isInstalled = false;
+        jest.doMock(
+          '@nx-plugin-openapi/plugin-pm-log',
+          () => {
+            if (!isInstalled) {
+              const error = new Error('Cannot find module');
+              (error as Error & { code: string }).code = 'ERR_MODULE_NOT_FOUND';
+              throw error;
+            }
+            return { default: mockPlugin };
+          },
+          { virtual: true }
+        );
+
+        (autoInstaller.installPackages as jest.Mock).mockImplementation(() => {
+          isInstalled = true;
+        });
+
+        // Mock detectPackageManager to return a specific value
+        (autoInstaller.detectPackageManager as jest.Mock).mockReturnValue(
+          'pnpm'
+        );
+
+        await loadPlugin('@nx-plugin-openapi/plugin-pm-log', {
+          skipPrompt: true,
+        });
+
+        // Verify detectPackageManager was called
+        expect(autoInstaller.detectPackageManager).toHaveBeenCalled();
       });
 
       it('should check node_modules before attempting auto-installation', async () => {

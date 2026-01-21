@@ -3,8 +3,13 @@ import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorRegistry } from './registry';
 import { isGeneratorPlugin } from './type-guards';
 import { logger } from '@nx/devkit';
-import { detectCi, installPackages } from './auto-installer';
+import {
+  detectCi,
+  detectPackageManager,
+  installPackages,
+} from './auto-installer';
 import { isLocalDev } from './utils/is-local-dev';
+import * as readline from 'node:readline';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
@@ -30,9 +35,51 @@ function shouldTryAutoInstall(error: unknown, packageName: string): boolean {
   );
 }
 
+/**
+ * Extracts a clean error message without stack trace for user-facing logs.
+ * Full error details are logged via logger.debug for verbose mode.
+ */
+function getCleanErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+/**
+ * Prompts the user for confirmation before auto-installing a package.
+ * Returns true if user confirms (y/Y/yes), false otherwise.
+ * In non-interactive environments, returns false.
+ */
+async function promptForInstall(packageName: string): Promise<boolean> {
+  // Check if stdin is a TTY (interactive terminal)
+  if (!process.stdin.isTTY) {
+    logger.debug('Non-interactive environment detected, skipping prompt');
+    return false;
+  }
+
+  const pm = detectPackageManager();
+
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question(
+      `\nPlugin '${packageName}' is not installed.\nWould you like to install it using ${pm}? (y/n) `,
+      (answer) => {
+        rl.close();
+        const normalizedAnswer = answer.trim().toLowerCase();
+        resolve(normalizedAnswer === 'y' || normalizedAnswer === 'yes');
+      }
+    );
+  });
+}
+
 export async function loadPlugin(
   name: string,
-  opts?: { root?: string }
+  opts?: { root?: string; skipPrompt?: boolean }
 ): Promise<GeneratorPlugin> {
   logger.debug(`Loading plugin: ${name}`);
 
@@ -110,29 +157,40 @@ export async function loadPlugin(
     const isModuleNotFound =
       code === 'ERR_MODULE_NOT_FOUND' || /Cannot find module/.test(msg);
 
+    // Log clean message for users, full details in debug mode
     logger.debug(`Failed to load plugin from node_modules: ${e}`);
 
     // 2. If module not found and auto-install conditions are met, try auto-installation
     if (isModuleNotFound && shouldTryAutoInstall(e, pkg)) {
-      logger.info(
-        `Plugin ${pkg} not found in node_modules. Attempting to auto-install...`
-      );
-      try {
-        installPackages([pkg], { dev: true });
-        logger.info(`Successfully installed ${pkg}, loading plugin...`);
+      // Prompt user for confirmation (unless skipped via option)
+      const shouldInstall = opts?.skipPrompt
+        ? true
+        : await promptForInstall(pkg);
 
-        // Retry the import after installation
-        const retryMod = await import(pkg);
-        const plugin = await loadFromModule(retryMod);
+      if (shouldInstall) {
+        const pm = detectPackageManager();
+        logger.info(`Installing ${pkg} using ${pm}...`);
+        try {
+          installPackages([pkg], { dev: true });
+          logger.info(`Successfully installed ${pkg}`);
 
-        logger.info(
-          `Successfully loaded plugin after auto-installation: ${name}`
-        );
-        cache.set(name, plugin);
-        return plugin;
-      } catch (installError) {
-        logger.warn(`Auto-installation failed for ${pkg}: ${installError}`);
-        // Continue to fallback paths for local development
+          // Retry the import after installation
+          const retryMod = await import(pkg);
+          const plugin = await loadFromModule(retryMod);
+
+          logger.info(`Successfully loaded plugin: ${name}`);
+          cache.set(name, plugin);
+          return plugin;
+        } catch (installError) {
+          // Show clean message to user, full details in debug
+          logger.debug(`Full installation error: ${installError}`);
+          logger.warn(
+            `Auto-installation failed for ${pkg}: ${getCleanErrorMessage(installError)}`
+          );
+          // Continue to fallback paths for local development
+        }
+      } else {
+        logger.info(`Skipping installation of ${pkg}`);
       }
     }
 
@@ -179,15 +237,15 @@ export async function loadPlugin(
 
     // 4. If all attempts failed, throw appropriate error
     if (isModuleNotFound) {
-      logger.error(
-        `Plugin not found: ${name}. Searched paths: ${JSON.stringify(
-          searchPaths
-        )}`
-      );
+      // User-friendly message without technical details
+      logger.error(`Plugin not found: ${name}`);
+      logger.debug(`Searched paths: ${JSON.stringify(searchPaths)}`);
       throw new PluginNotFoundError(name, searchPaths);
     }
 
-    logger.error(`Failed to load plugin: ${name}. Error: ${e}`);
+    // User-friendly error, full details in debug
+    logger.error(`Failed to load plugin: ${name}. ${getCleanErrorMessage(e)}`);
+    logger.debug(`Full error details: ${e}`);
     throw new PluginLoadError(name, e);
   }
 }
