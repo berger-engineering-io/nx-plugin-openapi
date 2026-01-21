@@ -1,5 +1,5 @@
 {
-  "name": "@nx-plugin-openapi/plugin-hey-openapi",
+  "name": "@nx-plugin-openapi/plugin-hey-api",
   "version": "0.0.1",
   "dependencies": {
     "@nx-plugin-openapi/core": "0.0.1",

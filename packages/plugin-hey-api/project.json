@@ -1,7 +1,7 @@
 {
-  "name": "plugin-hey-openapi",
+  "name": "plugin-hey-api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/plugin-hey-openapi/src",
+  "sourceRoot": "packages/plugin-hey-api/src",
   "projectType": "library",
   "release": {
     "version": {
@@ -17,10 +17,10 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/plugin-hey-openapi",
-        "main": "packages/plugin-hey-openapi/src/index.ts",
-        "tsConfig": "packages/plugin-hey-openapi/tsconfig.lib.json",
-        "assets": ["packages/plugin-hey-openapi/*.md"]
+        "outputPath": "dist/packages/plugin-hey-api",
+        "main": "packages/plugin-hey-api/src/index.ts",
+        "tsConfig": "packages/plugin-hey-api/tsconfig.lib.json",
+        "assets": ["packages/plugin-hey-api/*.md"]
       }
     },
     "nx-release-publish": {
@@ -35,7 +35,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "packages/plugin-hey-openapi/jest.config.ts"
+        "jestConfig": "packages/plugin-hey-api/jest.config.ts"
       }
     }
   }
