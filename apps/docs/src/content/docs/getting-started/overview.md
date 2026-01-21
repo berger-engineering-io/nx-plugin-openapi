@@ -51,6 +51,7 @@ The project is structured as a modular plugin system, allowing you to choose the
 - Plugins are auto-installed when first used
 - Pass generator-specific options via `generatorOptions`
 - Support for multiple OpenAPI specifications in a single target
+- [Create custom plugins](/guides/creating-plugins/) for any OpenAPI generator
 
 ### 📦 **Production Ready**
 - Battle-tested generators used in thousands of production applications
@@ -74,6 +75,10 @@ Best for:
 - Projects prioritizing type safety
 - Fetch-based HTTP clients
 - Simpler, more lightweight generated code
+
+## Extensibility
+
+Need to integrate a different OpenAPI generator? The plugin architecture makes it easy to create custom plugins for any code generator. See our [Creating Custom Plugins](/guides/creating-plugins/) guide for a complete walkthrough.
 
 ## Next Steps
 

@@ -41,6 +41,12 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Guides',
+          items: [
+            { label: 'Creating Custom Plugins', slug: 'guides/creating-plugins' },
+          ],
+        },
+        {
           label: 'Roadmap',
           items: [{ label: 'Roadmap', slug: 'roadmap/roadmap' }],
         },
