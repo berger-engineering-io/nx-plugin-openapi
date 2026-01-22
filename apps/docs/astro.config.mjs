@@ -27,6 +27,15 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Plugins',
+          items: [
+            { label: 'Overview', slug: 'plugins/overview' },
+            { label: 'OpenAPI Generator', slug: 'plugins/plugin-openapi' },
+            { label: 'hey-api', slug: 'plugins/plugin-hey-api' },
+            { label: '@lambda-solutions/nx-plugin-openapi', slug: 'plugins/legacy-plugin' },
+          ],
+        },
+        {
           label: 'Usage',
           items: [
             { label: 'Configuration', slug: 'usage/configuration' },
