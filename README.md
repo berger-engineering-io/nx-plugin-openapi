@@ -94,7 +94,9 @@ For comprehensive documentation, visit our [documentation site](https://berger-e
 
 - [Getting Started](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/overview/)
 - [Installation Guide](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/installation/)
+- [Plugins Overview](https://berger-engineering-io.github.io/nx-plugin-openapi/plugins/overview/)
 - [Configuration Reference](https://berger-engineering-io.github.io/nx-plugin-openapi/usage/configuration/)
+- [Creating Custom Plugins](https://berger-engineering-io.github.io/nx-plugin-openapi/guides/creating-plugins/)
 - [Examples](https://berger-engineering-io.github.io/nx-plugin-openapi/usage/examples/)
 
 ## Features
