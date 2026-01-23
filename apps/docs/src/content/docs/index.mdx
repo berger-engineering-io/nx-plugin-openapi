@@ -34,8 +34,8 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 	<Card title="⚡ Powerful Caching" icon="lightning">
 		Leverages Nx's intelligent caching to avoid regenerating unchanged API clients.
 	</Card>
-	<Card title="🔧 Flexible Configuration" icon="setting">
-		Supports all OpenAPI Generator options with TypeScript-safe configuration.
+	<Card title="🔧 Extensible Plugin System" icon="setting">
+		Choose from multiple code generators or create your own custom plugins.
 	</Card>
 	<Card title="📦 TypeScript-Angular Ready" icon="puzzle">
 		Generates Angular-compatible TypeScript clients out of the box using the well established <a href="https://openapi-generator.tech/docs/generators/typescript-angular">OpenAPI Generator for Angular.</a>
@@ -45,8 +45,8 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 ## Features
 
 - **🎯 Executor-based**: Use `nx run my-app:generate-api` to generate API clients
+- **🔌 Plugin Architecture**: Choose between [OpenAPI Generator](/plugins/plugin-openapi/) or [hey-api](/plugins/plugin-hey-api/), or [create your own](/guides/creating-plugins/)
 - **📁 File & URL Support**: Work with local OpenAPI specs or remote URLs
-- **⚙️ Extensive Configuration**: Support for 30+ OpenAPI Generator options
 - **🔄 Smart Caching**: Only regenerates when OpenAPI specs change
 
 ## Quick Example

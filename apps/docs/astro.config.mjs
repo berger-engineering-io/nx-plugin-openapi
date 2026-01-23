@@ -32,7 +32,6 @@ export default defineConfig({
             { label: 'Overview', slug: 'plugins/overview' },
             { label: 'OpenAPI Generator', slug: 'plugins/plugin-openapi' },
             { label: 'hey-api', slug: 'plugins/plugin-hey-api' },
-            { label: '@lambda-solutions/nx-plugin-openapi', slug: 'plugins/legacy-plugin' },
           ],
         },
         {
@@ -53,6 +52,12 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'Creating Custom Plugins', slug: 'guides/creating-plugins' },
+          ],
+        },
+        {
+          label: 'Legacy Nx Plugin',
+          items: [
+            { label: 'Overview', slug: 'legacy-nx-plugin/overview' },
           ],
         },
         {
