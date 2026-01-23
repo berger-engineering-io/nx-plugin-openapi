@@ -39,7 +39,7 @@ A powerful Nx plugin ecosystem for generating API client code from OpenAPI speci
 
 ```bash
 # Install the core package
-npm install --save-dev @nx-plugin-openapi/core
+nx add @nx-plugin-openapi/core
 
 # Install a generator plugin (choose one or both)
 npm install --save-dev @nx-plugin-openapi/plugin-openapi  # For OpenAPI Generator
@@ -48,7 +48,13 @@ npm install --save-dev @nx-plugin-openapi/plugin-hey-api  # For hey-api
 
 ### Basic Usage
 
-Add a `generate-api` target to your `project.json`:
+Execute the following command:
+
+```bash
+nx g @nx-plugin-openapi/core:add-generate-api-target
+```
+
+This will add a `generate-api` target to your `project.json`:
 
 ```json
 {
@@ -90,7 +96,7 @@ nx run my-app:generate-api
 
 ## Documentation
 
-For comprehensive documentation, visit our [documentation site](https://berger-engineering-io.github.io/nx-plugin-openapi/).
+For comprehensive documentation, visit our [documentation site](https://nx-plugin-openapi.lambda-solutions.io/).
 
 - [Getting Started](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/overview/)
 - [Installation Guide](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/installation/)
