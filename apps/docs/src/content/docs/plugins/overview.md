@@ -13,7 +13,10 @@ The Nx Plugin OpenAPI ecosystem provides a modular plugin architecture, allowing
 |--------|---------|-----------------|-------------|
 | [OpenAPI Generator](/plugins/plugin-openapi/) | `@nx-plugin-openapi/plugin-openapi` | `openapi-tools` | Uses the battle-tested [OpenAPI Generator](https://openapi-generator.tech) |
 | [hey-api](/plugins/plugin-hey-api/) | `@nx-plugin-openapi/plugin-hey-api` | `hey-api` | Uses [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) for modern TypeScript clients |
-| [Legacy Plugin](/plugins/legacy-plugin/) | `@lambda-solutions/nx-plugin-openapi` | N/A (standalone) | Original standalone plugin for OpenAPI Generator |
+
+:::note[Legacy Package]
+Looking for the original `@lambda-solutions/nx-plugin-openapi` package? See the [Legacy Nx Plugin](/legacy-nx-plugin/overview/) section.
+:::
 
 ## Architecture
 
@@ -66,18 +69,6 @@ The plugin system is built around a core package that provides:
 - Plugin-based architecture for customization
 - Modern ESM output
 
-### Legacy Plugin (`@lambda-solutions/nx-plugin-openapi`)
-
-**Best for:**
-- Existing projects already using this plugin
-- Teams who want a single-package solution
-- Angular projects with simpler requirements
-
-**Features:**
-- All-in-one package (no separate core/plugin)
-- Dedicated executor for OpenAPI Generator
-- Same Nx integration features
-
 ## Using Multiple Generators
 
 You can use different generators for different projects in your monorepo:
@@ -120,4 +111,4 @@ Need to integrate a different OpenAPI generator? The plugin architecture makes i
 
 - [OpenAPI Generator Plugin](/plugins/plugin-openapi/) - Full documentation for the OpenAPI Generator plugin
 - [hey-api Plugin](/plugins/plugin-hey-api/) - Full documentation for the hey-api plugin
-- [Legacy Plugin](/plugins/legacy-plugin/) - Documentation for the original standalone plugin
+- [Creating Custom Plugins](/guides/creating-plugins/) - Build your own generator plugin
