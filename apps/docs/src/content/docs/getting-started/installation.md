@@ -21,6 +21,11 @@ The recommended approach is to use the new modular package structure with the co
 ### Step 1: Install the Core Package
 
 ```bash
+nx add @nx-plugin-openapi/core 
+```
+
+or 
+```bash
 npm install --save-dev @nx-plugin-openapi/core
 ```
 
