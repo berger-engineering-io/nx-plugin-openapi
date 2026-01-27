@@ -1,13 +1,13 @@
 {
   "name": "@nx-plugin-openapi/plugin-hey-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "dependencies": {
-    "@nx-plugin-openapi/core": "0.0.1",
+    "@nx-plugin-openapi/core": "0.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "19.8.14"
   },
   "peerDependencies": {
-    "@nx-plugin-openapi/core": ">=0.0.1",
+    "@nx-plugin-openapi/core": ">=0.1.0",
     "@hey-api/openapi-ts": "^0.83.1"
   },
   "type": "commonjs",
