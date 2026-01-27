@@ -64,11 +64,23 @@
     }
   },
   "release": {
-    "projects": ["packages/*", "!packages/*-e2e"],
-    "projectsRelationship": "independent",
-    "releaseTagPattern": "release/{projectName}/{version}",
-    "changelog": {
-      "projectChangelogs": true
+    "groups": {
+      "legacy": {
+        "projects": ["nx-plugin-openapi"],
+        "projectsRelationship": "independent",
+        "releaseTagPattern": "release/{projectName}/{version}",
+        "changelog": {
+          "projectChangelogs": true
+        }
+      },
+      "current": {
+        "projects": ["core", "plugin-openapi", "plugin-hey-api"],
+        "projectsRelationship": "independent",
+        "releaseTagPattern": "release/{projectName}/{version}",
+        "changelog": {
+          "projectChangelogs": true
+        }
+      }
     },
     "git": {
       "commitMessage": "chore(release): {version}"
