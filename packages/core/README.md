@@ -1,35 +1,32 @@
 # @nx-plugin-openapi/core
 
-Core package for the Nx Plugin OpenAPI ecosystem. This package provides the plugin infrastructure, executor, and generators for code generation from OpenAPI specifications.
+Core package for generating API clients from OpenAPI specs in Nx. Provides the executor, plugin loader, and generators.
 
-## Installation
-
-```bash
-npm install --save-dev @nx-plugin-openapi/core
-```
-
-You'll also need to install a generator plugin:
+## Install
 
 ```bash
-# For OpenAPI Generator
-npm install --save-dev @nx-plugin-openapi/plugin-openapi @openapitools/openapi-generator-cli
-
-# For hey-api
-npm install --save-dev @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
+nx add @nx-plugin-openapi/core
 ```
 
-## Features
+Then install a generator plugin:
 
-- **Plugin Architecture**: Extensible system supporting multiple code generators
-- **Auto-Installation**: Plugins are automatically installed when needed
-- **Multiple Specs**: Generate code from multiple OpenAPI specifications in a single target
-- **Nx Integration**: Full support for caching, affected commands, and dependency graph
+```bash
+# OpenAPI Generator (50+ languages, Angular services)
+npm install -D @nx-plugin-openapi/plugin-openapi @openapitools/openapi-generator-cli
 
-## Executors
+# hey-api (modern TypeScript, fetch/axios)
+npm install -D @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
+```
 
-### generate-api
+## Usage
 
-Generate API client code using a selected generator plugin.
+Add a target via the interactive generator:
+
+```bash
+nx g @nx-plugin-openapi/core:add-generate-api-target
+```
+
+Or configure `project.json` directly:
 
 ```json
 {
@@ -37,8 +34,8 @@ Generate API client code using a selected generator plugin.
     "generate-api": {
       "executor": "@nx-plugin-openapi/core:generate-api",
       "options": {
-        "generator": "openapi-tools",
-        "inputSpec": "apps/my-app/swagger.json",
+        "generator": "hey-api",
+        "inputSpec": "apps/my-app/openapi.yaml",
         "outputPath": "libs/api-client/src"
       }
     }
@@ -46,59 +43,39 @@ Generate API client code using a selected generator plugin.
 }
 ```
 
-#### Options
+Then run:
+
+```bash
+nx run my-app:generate-api
+```
+
+## Executor options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `generator` | string | `"openapi-tools"` | Generator plugin to use (`"openapi-tools"` or `"hey-api"`) |
-| `inputSpec` | string \| object | *required* | Path to OpenAPI spec(s) |
-| `outputPath` | string | *required* | Output directory |
-| `generatorOptions` | object | `{}` | Plugin-specific options |
+| `generator` | `string` | `"openapi-tools"` | `"openapi-tools"` or `"hey-api"` |
+| `inputSpec` | `string \| object` | *required* | Path/URL to spec, or `{ name: path }` for multiple |
+| `outputPath` | `string` | *required* | Output directory |
+| `generatorOptions` | `object` | `{}` | Options forwarded to the generator plugin |
 
-## Generators
-
-### add-generate-api-target
-
-Add a `generate-api` target to an existing project.
-
-```bash
-nx generate @nx-plugin-openapi/core:add-generate-api-target --project=my-app
-```
-
-### init
-
-Initialize core plugin defaults in the workspace.
-
-```bash
-nx generate @nx-plugin-openapi/core:init
-```
-
-## Available Generator Plugins
-
-| Plugin | Package | Generator Name |
-|--------|---------|----------------|
-| OpenAPI Generator | `@nx-plugin-openapi/plugin-openapi` | `openapi-tools` |
-| hey-api | `@nx-plugin-openapi/plugin-hey-api` | `hey-api` |
-
-## Plugin Development
-
-The core package exports interfaces for building custom generator plugins:
+## Plugin development
 
 ```typescript
-import { GeneratorPlugin, GenerateOptionsBase, GeneratorContext } from '@nx-plugin-openapi/core';
+import { BaseGenerator, GeneratorPlugin, GenerateOptionsBase, GeneratorContext } from '@nx-plugin-openapi/core';
 
-export class MyGenerator implements GeneratorPlugin {
+export class MyGenerator extends BaseGenerator implements GeneratorPlugin {
   readonly name = 'my-generator';
 
   async generate(options: GenerateOptionsBase, ctx: GeneratorContext): Promise<void> {
-    // Implementation
+    this.cleanOutput(ctx, options.outputPath);
+    // your generation logic
   }
 }
+
+export default new MyGenerator();
 ```
 
-## Documentation
-
-For comprehensive documentation, visit our [documentation site](https://berger-engineering-io.github.io/nx-plugin-openapi/).
+See the [Creating Custom Plugins](https://berger-engineering-io.github.io/nx-plugin-openapi/guides/creating-plugins/) guide.
 
 ## License
 

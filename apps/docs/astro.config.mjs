@@ -9,7 +9,7 @@ export default defineConfig({
     starlight({
       title: 'Nx Plugin OpenAPI',
       description:
-        'Nx Plugin for seamless integration of OpenAPI Generator Angular client',
+        'Generate type-safe API clients from OpenAPI specs in your Nx workspace',
       social: [
         {
           icon: 'github',
@@ -18,44 +18,31 @@ export default defineConfig({
         },
       ],
       sidebar: [
-        {
-          label: 'Getting Started',
-          items: [
-            { label: 'Overview', slug: 'getting-started/overview' },
-            { label: 'Installation', slug: 'getting-started/installation' },
-            { label: 'Quick Start', slug: 'getting-started/quick-start' },
-          ],
-        },
+        { label: 'Getting Started', slug: 'getting-started' },
         {
           label: 'Plugins',
           items: [
-            { label: 'Overview', slug: 'plugins/overview' },
             { label: 'OpenAPI Generator', slug: 'plugins/plugin-openapi' },
             { label: 'hey-api', slug: 'plugins/plugin-hey-api' },
           ],
         },
         {
-          label: 'Usage',
+          label: 'Reference',
           items: [
-            { label: 'Configuration', slug: 'usage/configuration' },
-            { label: 'Examples', slug: 'usage/examples' },
-            { label: 'Nx Integration', slug: 'usage/nx-integration' },
-          ],
-        },
-        {
-          label: 'API Reference',
-          items: [
-            { label: 'generate-api executor', slug: 'reference/generate-api' },
+            { label: 'Configuration', slug: 'reference/configuration' },
           ],
         },
         {
           label: 'Guides',
           items: [
-            { label: 'Creating Custom Plugins', slug: 'guides/creating-plugins' },
+            {
+              label: 'Creating Custom Plugins',
+              slug: 'guides/creating-plugins',
+            },
           ],
         },
         {
-          label: 'Legacy Nx Plugin',
+          label: 'Legacy Plugin',
           items: [
             { label: 'Overview', slug: 'legacy-nx-plugin/overview' },
           ],

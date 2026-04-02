@@ -1,16 +1,14 @@
 # @nx-plugin-openapi/plugin-hey-api
 
-Generator plugin for [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts). This plugin integrates with `@nx-plugin-openapi/core` to provide modern TypeScript client generation from OpenAPI specifications.
+[hey-api/openapi-ts](https://heyapi.dev/) plugin for `@nx-plugin-openapi/core`. Modern TypeScript client generation with excellent type safety.
 
-## Installation
+## Install
 
 ```bash
-npm install --save-dev @nx-plugin-openapi/core @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
+npm install -D @nx-plugin-openapi/core @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
 ```
 
 ## Usage
-
-Configure the `generate-api` executor with `generator: "hey-api"`:
 
 ```json
 {
@@ -27,51 +25,9 @@ Configure the `generate-api` executor with `generator: "hey-api"`:
 }
 ```
 
-## Features
+### With options
 
-- **Modern TypeScript**: Type-safe client generation with excellent TypeScript support
-- **Multiple HTTP Clients**: Support for fetch, axios, and other HTTP clients
-- **Plugin System**: Extensible via hey-api plugins
-- **Lightweight Output**: Cleaner, more maintainable generated code
-
-## Options
-
-Pass hey-api options via `generatorOptions`. See the [hey-api documentation](https://heyapi.dev/) for all available options.
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `client` | string | HTTP client to use (`"fetch"`, `"axios"`, etc.) |
-| `plugins` | array | Array of hey-api plugins to enable |
-| `schemas` | object | Schema generation configuration |
-| `services` | object | Service generation configuration |
-| `types` | object | Type generation configuration |
-
-### Example with Options
-
-```json
-{
-  "targets": {
-    "generate-api": {
-      "executor": "@nx-plugin-openapi/core:generate-api",
-      "options": {
-        "generator": "hey-api",
-        "inputSpec": "apps/my-app/openapi.yaml",
-        "outputPath": "libs/api-client/src",
-        "generatorOptions": {
-          "client": "fetch",
-          "plugins": [
-            "@hey-api/schemas",
-            "@hey-api/services",
-            "@hey-api/types"
-          ]
-        }
-      }
-    }
-  }
-}
-```
-
-### Using Axios Client
+Pass hey-api options via `generatorOptions`. See [hey-api docs](https://heyapi.dev/) for all options.
 
 ```json
 {
@@ -80,15 +36,33 @@ Pass hey-api options via `generatorOptions`. See the [hey-api documentation](htt
     "inputSpec": "apps/my-app/openapi.yaml",
     "outputPath": "libs/api-client/src",
     "generatorOptions": {
-      "client": "axios"
+      "client": "@hey-api/client-fetch",
+      "plugins": [
+        "@hey-api/schemas",
+        "@hey-api/services",
+        { "name": "@hey-api/types", "enums": "javascript" }
+      ]
     }
   }
 }
 ```
 
-## Multiple Specifications
+### TanStack Query
 
-Generate clients for multiple APIs:
+```json
+{
+  "generatorOptions": {
+    "client": "@hey-api/client-fetch",
+    "plugins": [
+      "@hey-api/services",
+      "@hey-api/types",
+      "@tanstack/react-query"
+    ]
+  }
+}
+```
+
+### Multiple specs
 
 ```json
 {
@@ -98,46 +72,14 @@ Generate clients for multiple APIs:
       "users-api": "apis/users.yaml",
       "products-api": "apis/products.yaml"
     },
-    "outputPath": "libs/api-clients/src",
-    "generatorOptions": {
-      "client": "fetch"
-    }
+    "outputPath": "libs/api-clients/src"
   }
 }
 ```
 
-This generates:
-```
-libs/api-clients/src/
-  users-api/
-    // Users API client
-  products-api/
-    // Products API client
-```
-
-## Generated Output Structure
-
-```
-libs/api-client/src/
-├── client/
-│   └── client.ts
-├── schemas/
-│   └── ...
-├── services/
-│   └── ...
-├── types/
-│   └── ...
-└── index.ts
-```
-
-## Peer Dependencies
+## Peer dependencies
 
 - `@hey-api/openapi-ts` (^0.83.1)
-
-## Documentation
-
-- [hey-api Documentation](https://heyapi.dev/)
-- [Nx Plugin OpenAPI Documentation](https://berger-engineering-io.github.io/nx-plugin-openapi/)
 
 ## License
 

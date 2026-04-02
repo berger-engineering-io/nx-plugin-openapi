@@ -1,62 +1,37 @@
 # Nx Plugin OpenAPI
 
-A powerful Nx plugin ecosystem for generating API client code from OpenAPI specifications. This monorepo provides a flexible, plugin-based architecture that supports multiple code generators.
+Generate API clients from OpenAPI specs in your Nx workspace. Pluggable architecture -- choose the generator that fits your stack.
 
 ## Packages
 
-| Package | Description | npm |
-|---------|-------------|-----|
-| [`@nx-plugin-openapi/core`](./packages/core/README.md) | Core plugin system with executor and generators | [![npm](https://img.shields.io/npm/v/@nx-plugin-openapi/core.svg)](https://www.npmjs.com/package/@nx-plugin-openapi/core) |
-| [`@nx-plugin-openapi/plugin-openapi`](./packages/plugin-openapi/README.md) | Plugin for [OpenAPI Generator](https://openapi-generator.tech) | [![npm](https://img.shields.io/npm/v/@nx-plugin-openapi/plugin-openapi.svg)](https://www.npmjs.com/package/@nx-plugin-openapi/plugin-openapi) |
-| [`@nx-plugin-openapi/plugin-hey-api`](./packages/plugin-hey-api/README.md) | Plugin for [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) | [![npm](https://img.shields.io/npm/v/@nx-plugin-openapi/plugin-hey-api.svg)](https://www.npmjs.com/package/@nx-plugin-openapi/plugin-hey-api) |
-| [`@lambda-solutions/nx-plugin-openapi`](./packages/nx-plugin-openapi/README.md) | Legacy package (OpenAPI Generator only) | [![npm](https://img.shields.io/npm/v/@lambda-solutions/nx-plugin-openapi.svg)](https://www.npmjs.com/package/@lambda-solutions/nx-plugin-openapi) |
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   @nx-plugin-openapi/core                    │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  generate-api   │  │  Plugin Loader  │  │ Auto Install │ │
-│  │   executor      │  │                 │  │              │ │
-│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                              │
-          ┌───────────────────┴───────────────────┐
-          ▼                                       ▼
-┌────────────────────────┐           ┌────────────────────────┐
-│ @nx-plugin-openapi/    │           │ @nx-plugin-openapi/    │
-│   plugin-openapi       │           │   plugin-hey-api       │
-│                        │           │                        │
-│ Uses @openapitools/    │           │ Uses @hey-api/         │
-│ openapi-generator-cli  │           │ openapi-ts             │
-└────────────────────────┘           └────────────────────────┘
-```
+| Package | Description |
+|---------|-------------|
+| [`@nx-plugin-openapi/core`](./packages/core/README.md) | Core executor and plugin system |
+| [`@nx-plugin-openapi/plugin-openapi`](./packages/plugin-openapi/README.md) | [OpenAPI Generator](https://openapi-generator.tech) -- 50+ languages, Angular services |
+| [`@nx-plugin-openapi/plugin-hey-api`](./packages/plugin-hey-api/README.md) | [hey-api](https://heyapi.dev/) -- modern TypeScript, fetch/axios, tree-shakeable |
 
 ## Quick Start
 
-### Installation
+**1. Install core + a generator plugin**
 
 ```bash
-# Install the core package
 nx add @nx-plugin-openapi/core
 
-# Install a generator plugin (choose one or both)
-npm install --save-dev @nx-plugin-openapi/plugin-openapi  # For OpenAPI Generator
-npm install --save-dev @nx-plugin-openapi/plugin-hey-api  # For hey-api
+# Pick one (or both):
+npm install -D @nx-plugin-openapi/plugin-openapi @openapitools/openapi-generator-cli
+npm install -D @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
 ```
 
-### Basic Usage
-
-Execute the following command:
+**2. Add a target** (interactive)
 
 ```bash
 nx g @nx-plugin-openapi/core:add-generate-api-target
 ```
 
-This will add a `generate-api` target to your `project.json`:
+Or add it manually to `project.json`:
 
-```json
+```jsonc
+// OpenAPI Generator
 {
   "targets": {
     "generate-api": {
@@ -71,9 +46,8 @@ This will add a `generate-api` target to your `project.json`:
 }
 ```
 
-Or use the `hey-api` generator:
-
-```json
+```jsonc
+// hey-api
 {
   "targets": {
     "generate-api": {
@@ -88,48 +62,26 @@ Or use the `hey-api` generator:
 }
 ```
 
-### Run the generator
+**3. Generate**
 
 ```bash
 nx run my-app:generate-api
 ```
 
+## Why this plugin?
+
+- **Nx-native** -- caching, affected commands, dependency graph, Nx Cloud
+- **Pluggable** -- swap generators without changing your workflow
+- **Multiple specs** -- generate from several OpenAPI files in one target
+- **Auto-install** -- missing plugins are installed on first run
+
 ## Documentation
 
-For comprehensive documentation, visit our [documentation site](https://nx-plugin-openapi.lambda-solutions.io/).
+Full docs: [berger-engineering-io.github.io/nx-plugin-openapi](https://berger-engineering-io.github.io/nx-plugin-openapi/)
 
-- [Getting Started](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/overview/)
-- [Installation Guide](https://berger-engineering-io.github.io/nx-plugin-openapi/getting-started/installation/)
-- [Plugins Overview](https://berger-engineering-io.github.io/nx-plugin-openapi/plugins/overview/)
-- [Configuration Reference](https://berger-engineering-io.github.io/nx-plugin-openapi/usage/configuration/)
-- [Creating Custom Plugins](https://berger-engineering-io.github.io/nx-plugin-openapi/guides/creating-plugins/)
-- [Examples](https://berger-engineering-io.github.io/nx-plugin-openapi/usage/examples/)
+## Legacy package
 
-## Features
-
-- **Plugin Architecture**: Choose between multiple code generators
-- **Auto-Installation**: Plugins are automatically installed when needed
-- **Nx Integration**: Full support for Nx caching, affected commands, and dependency graph
-- **Multiple Specs**: Generate code from multiple OpenAPI specifications in a single target
-- **Flexible Configuration**: Pass generator-specific options via `generatorOptions`
-
-## Available Generators
-
-### `openapi-tools` (via `@nx-plugin-openapi/plugin-openapi`)
-
-Uses the battle-tested [OpenAPI Generator](https://openapi-generator.tech) to generate TypeScript Angular clients and more.
-
-**Peer dependency**: `@openapitools/openapi-generator-cli`
-
-### `hey-api` (via `@nx-plugin-openapi/plugin-hey-api`)
-
-Uses [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) for modern TypeScript client generation with excellent type safety.
-
-**Peer dependency**: `@hey-api/openapi-ts`
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+The original `@lambda-solutions/nx-plugin-openapi` is still maintained for backward compatibility. See [migration guide](./packages/nx-plugin-openapi/README.md).
 
 ## License
 

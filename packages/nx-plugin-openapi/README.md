@@ -1,30 +1,58 @@
-# @lambda-solutions/nx-plugin-openapi
-Nx Plugin for seamless Nx integration of [OpenApi Generator](https://openapi-generator.tech) Angular client.
+# @lambda-solutions/nx-plugin-openapi (Legacy)
 
-## Features
-* Executor for generating Angular API clients from OpenAPI specifications
-* First class caching support
+Original Nx plugin for [OpenAPI Generator](https://openapi-generator.tech) Angular clients.
 
-![Setup](../../apps/docs/public/nx-plugin-openapi-setup.gif)
+> **For new projects, use [`@nx-plugin-openapi/core`](../core/README.md) with a generator plugin instead.** It supports multiple generators and has a more flexible architecture.
 
-## Installation
+## Install
 
-To install the Plugin in your Nx workspace, run the following command:
 ```bash
 nx add @lambda-solutions/nx-plugin-openapi
 ```
 
-Or if you prefer to install it manually, you can add it as a dev dependency:
-```bash
-npm install --save-dev @lambda-solutions/nx-plugin-openapi
+## Usage
+
+```json
+{
+  "targets": {
+    "generate-api": {
+      "executor": "@lambda-solutions/nx-plugin-openapi:generate-api",
+      "options": {
+        "inputSpec": "apps/my-app/swagger.json",
+        "outputPath": "libs/api-client/src"
+      }
+    }
+  }
+}
 ```
-## Docs
-See [Docs](https://nx-plugin-openapi.lambda-solutions.io/)
 
-## Roadmap
-See [official documentaiton](https://nx-plugin-openapi.lambda-solutions.io/roadmap/roadmap/)
+```bash
+nx run my-app:generate-api
+```
 
+## Migrating to the modular packages
 
+1. Install:
+   ```bash
+   npm install -D @nx-plugin-openapi/core @nx-plugin-openapi/plugin-openapi
+   ```
+
+2. Update executor in `project.json`:
+   ```json
+   {
+     "executor": "@nx-plugin-openapi/core:generate-api",
+     "options": {
+       "generator": "openapi-tools",
+       "inputSpec": "apps/my-app/swagger.json",
+       "outputPath": "libs/api-client/src"
+     }
+   }
+   ```
+
+3. Remove legacy package:
+   ```bash
+   npm uninstall @lambda-solutions/nx-plugin-openapi
+   ```
 
 ## License
 

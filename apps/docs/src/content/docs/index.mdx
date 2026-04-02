@@ -1,13 +1,13 @@
 ---
 title: Nx Plugin OpenAPI
-description: Nx Plugin for seamless integration of OpenAPI Generator Angular client
+description: Generate API clients from OpenAPI specs in your Nx workspace
 template: splash
 hero:
-  tagline: Seamless Nx integration of OpenAPI generator. Generate Angular API clients from OpenAPI specifications with ease!
+  tagline: Generate type-safe API clients from OpenAPI specs -- pluggable, cacheable, Nx-native.
 
   actions:
     - text: Get Started
-      link: /getting-started/overview/
+      link: /getting-started/
       icon: right-arrow
     - text: View on GitHub
       link: https://github.com/berger-engineering-io/nx-plugin-openapi
@@ -15,40 +15,37 @@ hero:
       variant: minimal
 ---
 
-
-
-
-
-
-
-
-
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## Why Nx Plugin OpenAPI?
 
 <CardGrid stagger>
-	<Card title="🚀 Easy Integration" icon="rocket">
-		Seamlessly integrates with your Nx workspace using familiar executors and configurations.
+	<Card title="Pluggable generators" icon="puzzle">
+		Choose between <a href="/plugins/plugin-openapi/">OpenAPI Generator</a> (50+ languages) or <a href="/plugins/plugin-hey-api/">hey-api</a> (modern TypeScript) -- or <a href="/guides/creating-plugins/">build your own</a>.
 	</Card>
-	<Card title="⚡ Powerful Caching" icon="lightning">
-		Leverages Nx's intelligent caching to avoid regenerating unchanged API clients.
+	<Card title="Nx-native" icon="rocket">
+		Uses standard Nx executors. Full support for caching, affected commands, dependency graph, and Nx Cloud.
 	</Card>
-	<Card title="🔧 Extensible Plugin System" icon="setting">
-		Choose from multiple code generators or create your own custom plugins.
+	<Card title="Multiple specs" icon="setting">
+		Generate clients from several OpenAPI files in a single target -- great for microservice architectures.
 	</Card>
-	<Card title="📦 TypeScript-Angular Ready" icon="puzzle">
-		Generates Angular-compatible TypeScript clients out of the box using the well established <a href="https://openapi-generator.tech/docs/generators/typescript-angular">OpenAPI Generator for Angular.</a>
+	<Card title="Zero config start" icon="lightning">
+		Run `nx g @nx-plugin-openapi/core:add-generate-api-target` and you're generating code. Plugins auto-install on first use.
 	</Card>
 </CardGrid>
 
-## Features
+## Quick start
 
-- **🎯 Executor-based**: Use `nx run my-app:generate-api` to generate API clients
-- **🔌 Plugin Architecture**: Choose between [OpenAPI Generator](/plugins/plugin-openapi/) or [hey-api](/plugins/plugin-hey-api/), or [create your own](/guides/creating-plugins/)
-- **📁 File & URL Support**: Work with local OpenAPI specs or remote URLs
-- **🔄 Smart Caching**: Only regenerates when OpenAPI specs change
+```bash
+# 1. Install
+nx add @nx-plugin-openapi/core
+npm install -D @nx-plugin-openapi/plugin-hey-api @hey-api/openapi-ts
 
-## Quick Example
+# 2. Add target (interactive)
+nx g @nx-plugin-openapi/core:add-generate-api-target
 
-Ready to get started? Check out our [installation guide](/getting-started/installation/) or explore the [examples](/usage/examples/).
+# 3. Generate
+nx run my-app:generate-api
+```
+
+Ready to dive in? Head to the [Getting Started](/getting-started/) guide.
