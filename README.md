@@ -1,4 +1,6 @@
 # Nx Plugin OpenAPI
+> [!TIP]
+> @nx-plugin-openapi provides first class Nx Task Pipeline integration for popular OpenAPI code generators like OpenApiTools.
 
 A powerful Nx plugin ecosystem for generating API client code from OpenAPI specifications. This monorepo provides a flexible, plugin-based architecture that supports multiple code generators.
 
