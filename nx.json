@@ -82,10 +82,17 @@
         }
       }
     },
-    "git": {
-      "commitMessage": "chore(release): {version}"
+    "changelog": {
+      "git": {
+        "commit": true,
+        "tag": true,
+        "commitMessage": "chore(release): {version}"
+      }
     },
     "version": {
+      "git": {
+        "commitMessage": "chore(release): {version}"
+      },
       "preVersionCommand": "npx nx run-many -t build",
       "conventionalCommits": true
     }
