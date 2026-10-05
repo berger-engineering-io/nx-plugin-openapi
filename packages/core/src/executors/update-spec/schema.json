@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "Core Update Spec Executor",
+  "description": "Download remote OpenAPI spec(s) into committed file(s). Use with cache: false and never as a dependsOn of generate-api.",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "Remote spec URL (single spec)"
+    },
+    "urls": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Map of name -> remote spec URL (multiple specs)"
+    },
+    "specPath": {
+      "type": "string",
+      "description": "Target file for 'url', or target directory for 'urls' (relative to workspace root or absolute)"
+    },
+    "specPaths": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Map of name -> target file for 'urls'"
+    },
+    "headers": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "HTTP request headers. Values support ${ENV_VAR} substitution so secrets are not committed"
+    },
+    "check": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not write; fail if the remote spec differs from the committed file (CI drift detection)"
+    },
+    "format": {
+      "type": "string",
+      "enum": ["raw", "json"],
+      "default": "raw",
+      "description": "'raw' keeps the response as fetched; 'json' re-serializes JSON with 2-space indent for stable diffs"
+    }
+  },
+  "additionalProperties": false
+}
