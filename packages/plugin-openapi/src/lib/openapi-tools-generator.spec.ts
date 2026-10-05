@@ -368,9 +368,10 @@ describe('OpenApiToolsGenerator', () => {
         expect(resolveOpenApiGeneratorCli).toHaveBeenCalledWith('/workspace');
       });
 
-      it('should not spawn when the CLI cannot be resolved', async () => {
+      it('should fail fast without retries when the CLI cannot be resolved', async () => {
+        generator.setRetryOptions({ maxAttempts: 3, delayMs: 0 });
         (resolveOpenApiGeneratorCli as jest.Mock).mockImplementation(() => {
-          throw new Error('Could not resolve CLI');
+          throw new Error('Could not resolve CLI. Install it');
         });
 
         await expect(
@@ -378,8 +379,27 @@ describe('OpenApiToolsGenerator', () => {
             { inputSpec: 'api.yaml', outputPath: 'output' },
             mockContext
           )
-        ).rejects.toThrow('Failed to generate code after 1 attempts');
+        ).rejects.toThrow('Could not resolve CLI. Install it');
+        expect(resolveOpenApiGeneratorCli).toHaveBeenCalledTimes(1);
         expect(spawn).not.toHaveBeenCalled();
+      });
+
+      it('should resolve the CLI once across retries', async () => {
+        generator.setRetryOptions({ maxAttempts: 2, delayMs: 0 });
+        (spawn as jest.Mock).mockImplementation(() => {
+          const childProcess = new EventEmitter();
+          process.nextTick(() => childProcess.emit('close', 1));
+          return childProcess;
+        });
+
+        await expect(
+          generator.generate(
+            { inputSpec: 'api.yaml', outputPath: 'output' },
+            mockContext
+          )
+        ).rejects.toThrow('Failed to generate code after 2 attempts');
+        expect(spawn).toHaveBeenCalledTimes(2);
+        expect(resolveOpenApiGeneratorCli).toHaveBeenCalledTimes(1);
       });
 
       it('should use workspace root as cwd', async () => {
