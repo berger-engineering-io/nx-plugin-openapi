@@ -50,6 +50,10 @@ Pass hey-api specific options via the `generatorOptions` property or directly in
 | `inputSpec` | string | Path to OpenAPI spec (local or URL) |
 | `outputPath` | string | Output directory for generated code |
 
+:::note[Path resolution]
+Local `inputSpec` paths and `outputPath` are resolved relative to the **workspace root** (not the project root). Absolute paths are used as-is, and URLs (`http://`, `https://`, ...) are passed through unchanged. This also applies to each entry of a multi-service `inputSpec` record.
+:::
+
 ### hey-api Options
 
 | Option | Type | Description |

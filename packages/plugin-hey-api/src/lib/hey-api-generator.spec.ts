@@ -48,7 +48,7 @@ describe('HeyApiGenerator', () => {
     expect(cleanOutputSpy).toHaveBeenCalledWith(mockContext, 'src/generated');
     expect(mod.generate).toHaveBeenCalledWith(
       expect.objectContaining({
-        input: 'api.yaml',
+        input: '/workspace/api.yaml',
         output: '/workspace/src/generated',
         client: 'fetch',
       })
@@ -72,13 +72,13 @@ describe('HeyApiGenerator', () => {
     expect(mod.generate).toHaveBeenCalledTimes(2);
     expect(mod.generate).toHaveBeenCalledWith(
       expect.objectContaining({
-        input: 'users.yaml',
+        input: '/workspace/users.yaml',
         output: '/workspace/src/api/users',
       })
     );
     expect(mod.generate).toHaveBeenCalledWith(
       expect.objectContaining({
-        input: 'products.yaml',
+        input: '/workspace/products.yaml',
         output: '/workspace/src/api/products',
       })
     );
