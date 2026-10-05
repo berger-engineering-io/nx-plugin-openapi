@@ -87,12 +87,14 @@ export class OpenApiToolsGenerator
     ctx: GeneratorContext,
     specIdentifier: string
   ): Promise<void> {
+    // Resolve once before retrying: a missing CLI is not transient, so fail fast
+    const cliPath = resolveOpenApiGeneratorCli(ctx.root);
     let lastError: Error | undefined;
     
     for (let attempt = 1; attempt <= this.retryOptions.maxAttempts; attempt++) {
       try {
         logger.debug(`Attempt ${attempt} of ${this.retryOptions.maxAttempts} for ${specIdentifier}`);
-        await this.executeOpenApiGenerator(args, ctx);
+        await this.executeOpenApiGenerator(cliPath, args, ctx);
         return; // Success
       } catch (error) {
         lastError = error as Error;
@@ -117,10 +119,10 @@ export class OpenApiToolsGenerator
   }
 
   private async executeOpenApiGenerator(
+    cliPath: string,
     args: string[],
     ctx: GeneratorContext
   ): Promise<void> {
-    const cliPath = resolveOpenApiGeneratorCli(ctx.root);
     return new Promise<void>((resolve, reject) => {
       const command = 'node';
       const fullArgs = [cliPath, ...args];
