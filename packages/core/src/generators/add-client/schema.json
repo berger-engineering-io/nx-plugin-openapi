@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "AddClientSchema",
+  "title": "Add an OpenAPI client",
+  "description": "Writes an openapi-client.json. The @nx-plugin-openapi/core/plugin Nx plugin infers the generate target and the generated libs from it.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Client name; project names and aliases derive from it (e.g. petstore -> petstore-api)",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "What name would you like to use for the client?"
+    },
+    "directory": {
+      "type": "string",
+      "description": "Directory of the client, relative to the workspace root (e.g. libs/shared/petstore)",
+      "x-prompt": "Which directory should hold the client (e.g. libs/shared/petstore)?"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Adds a 'scope:<scope>' tag to all projects of the client"
+    },
+    "spec": {
+      "type": "string",
+      "description": "Local spec path (relative to the workspace root) or URL. A URL is downloaded once to <directory>/<name>.openapi.json|yaml and stored for update-spec",
+      "x-prompt": "Where is the OpenAPI spec (local path or URL)?"
+    },
+    "adapter": {
+      "type": "string",
+      "description": "Generator plugin (adapter) written to the definition's generator field. Named adapter because nx g reserves --generator",
+      "enum": ["openapi-tools", "hey-api"],
+      "default": "openapi-tools",
+      "x-prompt": {
+        "message": "Which generator adapter would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "openapi-tools",
+            "label": "openapi-tools (OpenAPI Generator)"
+          },
+          { "value": "hey-api", "label": "hey-api" }
+        ]
+      }
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "Plugin-specific generator options",
+      "additionalProperties": true
+    },
+    "split": {
+      "type": "boolean",
+      "description": "Split the generated code into types, api and core libs",
+      "default": true
+    },
+    "importPrefix": {
+      "type": "string",
+      "description": "Prefix of the split lib aliases, e.g. '@acme' -> '@acme/petstore-api'. Default: the npm scope of the root package.json"
+    },
+    "addToGitignore": {
+      "type": "boolean",
+      "description": "Add the generated directories to .gitignore and .prettierignore",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files",
+      "default": false
+    }
+  },
+  "required": ["name", "directory", "spec"]
+}

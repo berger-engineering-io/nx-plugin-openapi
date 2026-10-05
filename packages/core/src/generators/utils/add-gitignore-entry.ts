@@ -8,7 +8,7 @@ export function addGitIgnoreEntry(args: { tree: Tree; entry: string }): void {
       'gm'
     );
     if (entryRegex.test(content)) return;
-    content = `${content}\n${args.entry}\n`;
+    content = `${content.replace(/\n*$/, '\n')}${args.entry}\n`;
     args.tree.write('.gitignore', content);
   } else {
     logger.warn("Couldn't find .gitignore file to update");

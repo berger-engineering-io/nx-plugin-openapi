@@ -123,7 +123,7 @@ export function substituteEnvVars(
   );
 }
 
-async function fetchSpec(
+export async function fetchSpec(
   url: string,
   headers: Record<string, string>
 ): Promise<string> {
