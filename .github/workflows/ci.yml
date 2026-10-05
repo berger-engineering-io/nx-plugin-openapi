@@ -33,6 +33,7 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      - run: npx nx affected -t lint
-      - run: npx nx affected -t test
+      # legacy nx-plugin-openapi stays on Nx 19 devkit; its lint/test are excluded under the Nx 23 toolchain
+      - run: npx nx affected -t lint --exclude=nx-plugin-openapi
+      - run: npx nx affected -t test --exclude=nx-plugin-openapi
       - run: npx nx affected -t build
