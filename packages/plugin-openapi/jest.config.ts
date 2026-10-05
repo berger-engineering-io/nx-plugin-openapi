@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'plugin-openapi',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',

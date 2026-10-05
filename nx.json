@@ -24,9 +24,11 @@
       "cache": true,
       "inputs": [
         "default",
+        "^default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js"
+        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
       ]
     },
     "@nx/jest:jest": {
@@ -122,17 +124,21 @@
       "legacy": {
         "projects": ["nx-plugin-openapi"],
         "projectsRelationship": "independent",
-        "releaseTagPattern": "release/{projectName}/{version}",
         "changelog": {
           "projectChangelogs": true
+        },
+        "releaseTag": {
+          "pattern": "release/{projectName}/{version}"
         }
       },
       "current": {
         "projects": ["core", "plugin-openapi", "plugin-hey-api"],
         "projectsRelationship": "independent",
-        "releaseTagPattern": "release/{projectName}/{version}",
         "changelog": {
           "projectChangelogs": true
+        },
+        "releaseTag": {
+          "pattern": "release/{projectName}/{version}"
         }
       }
     },

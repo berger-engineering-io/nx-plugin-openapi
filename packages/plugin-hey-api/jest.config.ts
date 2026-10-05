@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'plugin-hey-api',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
