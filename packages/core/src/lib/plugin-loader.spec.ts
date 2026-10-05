@@ -3,12 +3,22 @@ import { PluginLoadError, PluginNotFoundError } from './errors';
 import { GeneratorPlugin } from './interfaces';
 import { loadPlugin } from './plugin-loader';
 import * as autoInstaller from './auto-installer';
+import { dynamicImport } from './utils/dynamic-import';
 
 // Mock the auto-installer module
 jest.mock('./auto-installer', () => ({
   installPackages: jest.fn(),
   detectCi: jest.fn().mockReturnValue(false),
   detectPackageManager: jest.fn().mockReturnValue('npm'),
+}));
+
+// Native import() is unavailable in jest's vm; route it through jest's require
+// so jest.doMock'ed modules are resolved.
+jest.mock('./utils/dynamic-import', () => ({
+  dynamicImport: jest.fn((specifier: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Promise.resolve().then(() => require(specifier))
+  ),
 }));
 
 // Mock the dynamic imports
@@ -92,6 +102,43 @@ describe('plugin-loader', () => {
       );
 
       const result = await loadPlugin('default-export-plugin');
+
+      expect(result).toBe(mockPlugin);
+    });
+
+    it('should load plugin via native dynamic import helper', async () => {
+      const mockPlugin = { name: 'native-import-plugin', generate: jest.fn() };
+      jest.doMock('native-import-plugin', () => ({ default: mockPlugin }), {
+        virtual: true,
+      });
+
+      await loadPlugin('native-import-plugin');
+
+      expect(dynamicImport).toHaveBeenCalledWith('native-import-plugin');
+    });
+
+    it('should unwrap CJS module.exports exposed as default by import()', async () => {
+      const mockPlugin = { name: 'cjs-interop-plugin', generate: jest.fn() };
+      jest.doMock(
+        'cjs-interop-plugin',
+        () => ({ default: { __esModule: true, default: mockPlugin } }),
+        { virtual: true }
+      );
+
+      const result = await loadPlugin('cjs-interop-plugin');
+
+      expect(result).toBe(mockPlugin);
+    });
+
+    it('should unwrap CJS createPlugin exposed under default by import()', async () => {
+      const mockPlugin = { name: 'cjs-factory-plugin', generate: jest.fn() };
+      jest.doMock(
+        'cjs-factory-plugin',
+        () => ({ default: { createPlugin: () => mockPlugin } }),
+        { virtual: true }
+      );
+
+      const result = await loadPlugin('cjs-factory-plugin');
 
       expect(result).toBe(mockPlugin);
     });

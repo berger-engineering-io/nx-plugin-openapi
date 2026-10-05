@@ -9,7 +9,9 @@ import {
   installPackages,
 } from './auto-installer';
 import { isLocalDev } from './utils/is-local-dev';
+import { dynamicImport } from './utils/dynamic-import';
 import * as readline from 'node:readline';
+import { pathToFileURL } from 'node:url';
 
 const BUILTIN_PLUGIN_MAP: Record<string, string> = {
   'openapi-tools': '@nx-plugin-openapi/plugin-openapi',
@@ -17,6 +19,41 @@ const BUILTIN_PLUGIN_MAP: Record<string, string> = {
 };
 
 const cache = new Map<string, GeneratorPlugin>();
+
+interface PluginModule {
+  default?: unknown;
+  createPlugin?: unknown;
+  plugin?: unknown;
+  Plugin?: unknown;
+}
+
+function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
+}
+
+/**
+ * Looks up a plugin in the supported export patterns of a module.
+ */
+function findPluginExport(mod: PluginModule): GeneratorPlugin | undefined {
+  if (isGeneratorPlugin(mod.default)) {
+    logger.debug(`Found plugin as default export`);
+    return mod.default;
+  }
+  if (typeof mod.createPlugin === 'function') {
+    logger.debug(`Found createPlugin factory function`);
+    const created = (mod.createPlugin as () => unknown)();
+    return isGeneratorPlugin(created) ? created : undefined;
+  }
+  if (isGeneratorPlugin(mod.plugin)) {
+    logger.debug(`Found plugin as named export 'plugin'`);
+    return mod.plugin;
+  }
+  if (isGeneratorPlugin(mod.Plugin)) {
+    logger.debug(`Found plugin as named export 'Plugin'`);
+    return mod.Plugin;
+  }
+  return undefined;
+}
 
 /**
  * Helper function to determine if auto-installation should be attempted
@@ -102,28 +139,14 @@ export async function loadPlugin(
   logger.debug(`Attempting to load plugin from package: ${pkg}`);
 
   // Helper function to load plugin from module
-  async function loadFromModule(mod: {
-    default?: unknown;
-    createPlugin?: unknown;
-    plugin?: unknown;
-    Plugin?: unknown;
-  }): Promise<GeneratorPlugin> {
-    let candidate: unknown = undefined;
-
-    // Try different export patterns
-    if (isGeneratorPlugin(mod.default)) {
-      logger.debug(`Found plugin as default export`);
-      candidate = mod.default;
-    } else if (typeof mod.createPlugin === 'function') {
-      logger.debug(`Found createPlugin factory function`);
-      candidate = (mod.createPlugin as () => unknown)();
-    } else if (isGeneratorPlugin(mod.plugin)) {
-      logger.debug(`Found plugin as named export 'plugin'`);
-      candidate = mod.plugin;
-    } else if (isGeneratorPlugin(mod.Plugin)) {
-      logger.debug(`Found plugin as named export 'Plugin'`);
-      candidate = mod.Plugin;
-    }
+  async function loadFromModule(mod: PluginModule): Promise<GeneratorPlugin> {
+    // A native import() of a CJS module exposes `module.exports` as `default`,
+    // so e.g. `exports.default = plugin` ends up at `mod.default.default`.
+    const candidate =
+      findPluginExport(mod) ??
+      (isObject(mod.default)
+        ? findPluginExport(mod.default as PluginModule)
+        : undefined);
 
     if (!isGeneratorPlugin(candidate)) {
       const availableExports = Object.keys(mod).filter(
@@ -144,7 +167,7 @@ export async function loadPlugin(
 
   // 1. First try to load from node_modules (already installed packages)
   try {
-    const mod = await import(pkg);
+    const mod = await dynamicImport<PluginModule>(pkg);
     logger.debug(`Successfully imported module from node_modules: ${pkg}`);
 
     const plugin = await loadFromModule(mod);
@@ -175,7 +198,7 @@ export async function loadPlugin(
           logger.info(`Successfully installed ${pkg}`);
 
           // Retry the import after installation
-          const retryMod = await import(pkg);
+          const retryMod = await dynamicImport<PluginModule>(pkg);
           const plugin = await loadFromModule(retryMod);
 
           logger.info(`Successfully loaded plugin: ${name}`);
@@ -215,18 +238,14 @@ export async function loadPlugin(
       for (const p of fallbackPaths) {
         try {
           logger.debug(`[Local Dev] Attempting to load from: ${p}`);
-          const { pathToFileURL } = await import('node:url');
           const url = pathToFileURL(p).href;
-          const mod2 = (await import(url)) as { default?: unknown };
-
-          if (isGeneratorPlugin(mod2?.default)) {
-            const plugin2 = mod2.default;
-            logger.info(
-              `[Local Dev] Successfully loaded plugin from fallback path: ${p}`
-            );
-            cache.set(name, plugin2);
-            return plugin2;
-          }
+          const mod2 = await dynamicImport<PluginModule>(url);
+          const plugin2 = await loadFromModule(mod2);
+          logger.info(
+            `[Local Dev] Successfully loaded plugin from fallback path: ${p}`
+          );
+          cache.set(name, plugin2);
+          return plugin2;
         } catch (fallbackError) {
           logger.debug(
             `[Local Dev] Failed to load from ${p}: ${fallbackError}`
