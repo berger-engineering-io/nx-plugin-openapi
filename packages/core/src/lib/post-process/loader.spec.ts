@@ -1,3 +1,11 @@
+// Native import() is unavailable in jest's vm; route it through jest's require
+// so jest.mock'ed virtual modules are resolved.
+jest.mock('../utils/dynamic-import', () => ({
+  dynamicImport: jest.fn((specifier: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Promise.resolve().then(() => require(specifier))
+  ),
+}));
 jest.mock(
   'pp-default-export',
   () => ({ default: { name: 'pp-default-export', run: jest.fn() } }),
@@ -15,6 +23,25 @@ jest.mock(
   }),
   { virtual: true }
 );
+jest.mock(
+  'pp-cjs-interop',
+  () => ({
+    default: {
+      __esModule: true,
+      default: { name: 'pp-cjs-interop', run: jest.fn() },
+    },
+  }),
+  { virtual: true }
+);
+jest.mock(
+  'pp-cjs-factory',
+  () => ({
+    default: {
+      createPostProcessor: () => ({ name: 'pp-cjs-factory', run: jest.fn() }),
+    },
+  }),
+  { virtual: true }
+);
 jest.mock('pp-invalid-export', () => ({ something: 1 }), { virtual: true });
 
 import {
@@ -24,6 +51,7 @@ import {
 } from './loader';
 import { PostProcessorRegistry } from './registry';
 import { PostProcessorLoadError, PostProcessorNotFoundError } from './errors';
+import { dynamicImport } from '../utils/dynamic-import';
 
 describe('post-processor loader', () => {
   beforeEach(() => {
@@ -62,6 +90,7 @@ describe('post-processor loader', () => {
     it('loads default export from package and caches it', async () => {
       const loaded = await loadPostProcessor('pp-default-export');
 
+      expect(dynamicImport).toHaveBeenCalledWith('pp-default-export');
       expect(loaded.name).toBe('pp-default-export');
       expect(PostProcessorRegistry.instance().has('pp-default-export')).toBe(
         true
@@ -81,6 +110,18 @@ describe('post-processor loader', () => {
       const loaded = await loadPostProcessor('pp-factory-export');
 
       expect(loaded.name).toBe('pp-factory-export');
+    });
+
+    it('unwraps CJS default.default from native import', async () => {
+      const loaded = await loadPostProcessor('pp-cjs-interop');
+
+      expect(loaded.name).toBe('pp-cjs-interop');
+    });
+
+    it('loads factory export nested in CJS default', async () => {
+      const loaded = await loadPostProcessor('pp-cjs-factory');
+
+      expect(loaded.name).toBe('pp-cjs-factory');
     });
 
     it('throws load error for invalid exports', async () => {
