@@ -50,3 +50,5 @@ apps/demo/src/appapps/demo/src/app/api/
 apps/demo/src/appapps/demo/src/app/api-services/
 /apps/demo/src/app/api-core/
 /apps/demo/src/app/api/
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
