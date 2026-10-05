@@ -7,3 +7,6 @@ export * from './lib/auto-installer';
 export * from './lib/type-guards';
 export * from './lib/validation';
 export * from './lib/post-process';
+export { CLIENT_DEFINITION_FILE } from './plugin/client-definition';
+export type { ClientDefinition } from './plugin/client-definition';
+export type { OpenApiPluginOptions } from './plugin/create-nodes';

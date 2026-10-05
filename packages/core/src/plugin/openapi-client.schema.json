@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenAPI client definition",
+  "description": "One file per client, read by the @nx-plugin-openapi/core/plugin Nx plugin. Paths are relative to this file.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": {
+      "type": "string",
+      "description": "Client name; inferred project names derive from it. Defaults to the directory name."
+    },
+    "spec": {
+      "type": "string",
+      "description": "Local OpenAPI spec file, the committed source of truth."
+    },
+    "url": {
+      "type": "string",
+      "description": "Remote spec URL. Enables the inferred update-spec target."
+    },
+    "headers": {
+      "type": "object",
+      "description": "Request headers for update-spec. Supports ${ENV_VAR} substitution.",
+      "additionalProperties": { "type": "string" }
+    },
+    "format": {
+      "type": "string",
+      "enum": ["raw", "json"],
+      "description": "How update-spec writes the downloaded spec."
+    },
+    "generator": {
+      "type": "string",
+      "description": "Generator plugin: openapi-tools, hey-api or a custom package name.",
+      "default": "openapi-tools"
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "Plugin-specific options passed to the generator.",
+      "additionalProperties": true
+    },
+    "output": {
+      "type": "string",
+      "description": "Generator output directory. Defaults to 'src', or 'generated' when split is configured."
+    },
+    "split": {
+      "type": "object",
+      "description": "Split the generated code into types, api and core libs.",
+      "properties": {
+        "targetRoot": {
+          "type": "string",
+          "description": "Directory receiving the types, api and core libs. Defaults to this directory."
+        },
+        "aliases": {
+          "type": "object",
+          "description": "Import path alias per lib.",
+          "properties": {
+            "types": { "type": "string" },
+            "api": { "type": "string" },
+            "core": { "type": "string" }
+          },
+          "required": ["types", "api", "core"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["aliases"],
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags added to all projects of this client, e.g. scope:shared.",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["spec"],
+  "additionalProperties": false
+}
