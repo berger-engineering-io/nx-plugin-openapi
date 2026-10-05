@@ -91,6 +91,10 @@ For the definition above, `nx show projects` lists:
 
 Without `split`, the client project holds the generated code itself and gets the `type:api` tag.
 
+:::caution
+Every lib needs at least one file tracked by git (e.g. a `README.md` in `types/`, `api/` and `core/`). Nx can't hash tasks of a project without files, and the generated `src` dirs are usually gitignored.
+:::
+
 Use the fixed `type:*` tags in `@nx/enforce-module-boundaries`. Models (`type:types`) import nothing, `core` (`type:util`) imports models, and services (`type:api`) import both:
 
 ```js title="eslint.config.js"
