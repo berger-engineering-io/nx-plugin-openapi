@@ -62,12 +62,12 @@ function typecheckLibs(targetDir: string): string[] {
     noEmit: true,
     strict: true,
     target: ts.ScriptTarget.ES2020,
-    moduleResolution: ts.ModuleResolutionKind.Node10,
-    baseUrl: targetDir,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
     paths: {
-      [aliases.types]: ['types/src/index.ts'],
-      [aliases.api]: ['api/src/index.ts'],
-      [aliases.core]: ['core/src/index.ts'],
+      [aliases.types]: [join(targetDir, 'types/src/index.ts')],
+      [aliases.api]: [join(targetDir, 'api/src/index.ts')],
+      [aliases.core]: [join(targetDir, 'core/src/index.ts')],
     },
     types: [],
   });
