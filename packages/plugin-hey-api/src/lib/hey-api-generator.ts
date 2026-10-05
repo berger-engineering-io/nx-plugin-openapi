@@ -32,8 +32,8 @@ export class HeyApiGenerator
     if (typeof inputSpec === 'string') {
       this.cleanOutput(ctx, outputPath);
       await this.invokeOpenApiTs({
-        input: inputSpec,
-        output: join(ctx.root, outputPath),
+        input: this.resolveInputSpecPath(ctx, inputSpec),
+        output: this.resolveOutputPath(ctx, outputPath),
         ...generatorOptions,
       });
     } else {
@@ -49,8 +49,8 @@ export class HeyApiGenerator
         const serviceOutputPath = join(outputPath, serviceName);
         this.cleanOutput(ctx, serviceOutputPath);
         await this.invokeOpenApiTs({
-          input: specPath,
-          output: join(ctx.root, serviceOutputPath),
+          input: this.resolveInputSpecPath(ctx, specPath),
+          output: this.resolveOutputPath(ctx, serviceOutputPath),
           ...generatorOptions,
         });
       }

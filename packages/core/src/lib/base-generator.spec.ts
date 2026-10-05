@@ -14,6 +14,18 @@ class TestGenerator extends BaseGenerator {
   public testCleanOutput(ctx: GeneratorContext, relOutputPath: string) {
     this.cleanOutput(ctx, relOutputPath);
   }
+
+  public testResolveOutputPath(ctx: GeneratorContext, outputPath: string) {
+    return this.resolveOutputPath(ctx, outputPath);
+  }
+
+  public testResolveInputSpecPath(ctx: GeneratorContext, spec: string) {
+    return this.resolveInputSpecPath(ctx, spec);
+  }
+
+  public testIsUrl(spec: string) {
+    return this.isUrl(spec);
+  }
 }
 
 describe('BaseGenerator', () => {
@@ -154,6 +166,84 @@ describe('BaseGenerator', () => {
       }).toThrow('Cannot clean empty or root output path for safety reasons');
 
       expect(rmSync).not.toHaveBeenCalled();
+    });
+
+    it('should remove absolute output path as-is', () => {
+      generator.testCleanOutput(mockContext, '/tmp/generated');
+
+      expect(rmSync).toHaveBeenCalledWith('/tmp/generated', {
+        recursive: true,
+        force: true,
+      });
+    });
+
+    it('should refuse to clean path resolving to workspace root', () => {
+      expect(() => {
+        generator.testCleanOutput(mockContext, './');
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+      expect(() => {
+        generator.testCleanOutput(mockContext, 'foo/..');
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+      expect(() => {
+        generator.testCleanOutput(mockContext, '/workspace');
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+
+      expect(rmSync).not.toHaveBeenCalled();
+    });
+
+    it('should refuse to clean filesystem root via relative traversal', () => {
+      expect(() => {
+        generator.testCleanOutput(mockContext, '../');
+      }).toThrow('Cannot clean empty or root output path for safety reasons');
+
+      expect(rmSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resolveOutputPath', () => {
+    it('should join relative path with workspace root', () => {
+      expect(generator.testResolveOutputPath(mockContext, 'libs/api/src')).toBe(
+        '/workspace/libs/api/src'
+      );
+    });
+
+    it('should keep absolute path untouched', () => {
+      expect(generator.testResolveOutputPath(mockContext, '/abs/out')).toBe(
+        '/abs/out'
+      );
+    });
+  });
+
+  describe('resolveInputSpecPath', () => {
+    it('should resolve relative spec against workspace root', () => {
+      expect(
+        generator.testResolveInputSpecPath(mockContext, 'specs/petstore.json')
+      ).toBe('/workspace/specs/petstore.json');
+    });
+
+    it('should keep absolute spec path untouched', () => {
+      expect(
+        generator.testResolveInputSpecPath(mockContext, '/abs/specs/api.yaml')
+      ).toBe('/abs/specs/api.yaml');
+    });
+
+    it.each([
+      'https://petstore3.swagger.io/api/v3/openapi.json',
+      'http://localhost:8080/openapi.yaml',
+      'file:///tmp/api.yaml',
+    ])('should keep URL %s untouched', (url) => {
+      expect(generator.testResolveInputSpecPath(mockContext, url)).toBe(url);
+    });
+  });
+
+  describe('isUrl', () => {
+    it('should not treat Windows drive paths as URLs', () => {
+      expect(generator.testIsUrl('C:\\specs\\api.yaml')).toBe(false);
+      expect(generator.testIsUrl('C:/specs/api.yaml')).toBe(false);
+    });
+
+    it('should not treat registry-like shorthand as URL', () => {
+      expect(generator.testIsUrl('specs/petstore.json')).toBe(false);
     });
   });
 });
