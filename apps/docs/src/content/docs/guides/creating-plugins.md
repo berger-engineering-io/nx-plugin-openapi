@@ -95,8 +95,22 @@ interface GeneratorPlugin<TOptions = Record<string, unknown>> {
 
   // Optional: Return JSON schema for configuration validation
   getSchema?(): unknown;
+
+  // Optional: Classify generated files for post-processors
+  classify?(
+    outDir: string,
+    options?: Record<string, unknown>
+  ): Promise<FileClassification> | FileClassification;
+
+  // Optional: Plugin-specific rewrite of a generated file
+  transform?(
+    file: GeneratedFile,
+    options?: Record<string, unknown>
+  ): Promise<string | undefined> | string | undefined;
 }
 ```
+
+`classify` and `transform` are only used by post-processors. See [Post-Processing](#post-processing).
 
 ### GenerateOptionsBase
 
@@ -632,6 +646,93 @@ private async invokeGenerator(
   });
 }
 ```
+
+## Post-Processing
+
+The `generate-api` executor can run post-processors after a successful generation via the [`postProcess`](/reference/generate-api/) option. Post-processors are generator-agnostic; generator plugins can support them through the optional `classify` and `transform` hooks.
+
+### Classifying Generated Files
+
+`classify(outDir, options)` tells post-processors what each generated file is. `outDir` is the absolute output directory; `options` are the options of the calling post-processor. Keys are paths relative to `outDir` with POSIX separators.
+
+```typescript
+import { readdirSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
+import { FileClassification, GeneratedFileKind } from '@nx-plugin-openapi/core';
+
+classify(outDir: string): FileClassification {
+  const files: Record<string, GeneratedFileKind> = {};
+  for (const entry of readdirSync(outDir, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const path = relative(outDir, join(entry.parentPath, entry.name)).split(sep).join('/');
+    files[path] = path.startsWith('model/') ? 'model'
+      : path.startsWith('api/') ? 'api'
+      : 'core';
+  }
+  return { files };
+}
+```
+
+| Kind | Meaning |
+|------|---------|
+| `model` | Data types / DTOs |
+| `api` | Services / operations calling the HTTP API |
+| `core` | Runtime support code (http client, configuration, utils) |
+| `other` | Anything else (docs, metadata, ...) |
+
+### Transforming Generated Files
+
+`transform(file, options)` lets a plugin rewrite a generated file in a generator-specific way, e.g. fixing imports after a post-processor moved files. It receives `{ path, content, kind? }` and returns the new content, or `undefined` to keep the file unchanged.
+
+```typescript
+transform(file: GeneratedFile): string | undefined {
+  if (file.kind !== 'api') return undefined;
+  return file.content.replace(/from '\.\.\/model'/g, "from '@my-org/api-types'");
+}
+```
+
+### Writing a Custom Post-Processor
+
+A post-processor is an object with a `name` and a `run(ctx, options)` method:
+
+```typescript
+import { PostProcessor } from '@nx-plugin-openapi/core';
+
+const bannerPostProcessor: PostProcessor<{ banner?: string }> = {
+  name: '@my-org/openapi-post-process-banner',
+  async run(ctx, options) {
+    // ctx.root, ctx.outputPath (relative), ctx.absoluteOutputPath,
+    // ctx.inputSpec, ctx.generatorName, ctx.generator, ctx.projectName
+    const classification = await ctx.generator.classify?.(
+      ctx.absoluteOutputPath,
+      options
+    );
+    // ... modify files
+  },
+};
+
+export default bannerPostProcessor;
+```
+
+Publish it as a package exporting the post-processor as `default`, `postProcessor`, or via a `createPostProcessor()` factory, then reference it by package name:
+
+```json
+{
+  "postProcess": [
+    { "name": "@my-org/openapi-post-process-banner", "options": { "banner": "// generated" } }
+  ]
+}
+```
+
+Alternatively, register it programmatically and reference it by its `name`:
+
+```typescript
+import { PostProcessorRegistry } from '@nx-plugin-openapi/core';
+
+PostProcessorRegistry.instance().register(bannerPostProcessor);
+```
+
+Post-processors run in the configured order. A thrown error fails the executor and skips the remaining steps.
 
 ## Real-World Examples
 

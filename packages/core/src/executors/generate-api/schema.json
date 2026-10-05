@@ -25,6 +25,26 @@
       "type": "object",
       "description": "Plugin-specific options",
       "additionalProperties": true
+    },
+    "postProcess": {
+      "type": "array",
+      "description": "Post-processors run in order after successful generation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Registered post-processor name or package name"
+          },
+          "options": {
+            "type": "object",
+            "description": "Options passed to the post-processor",
+            "additionalProperties": true
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
     }
   },
   "required": ["inputSpec", "outputPath"],

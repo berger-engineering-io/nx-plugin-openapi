@@ -6,3 +6,4 @@ export * from './lib/base-generator';
 export * from './lib/auto-installer';
 export * from './lib/type-guards';
 export * from './lib/validation';
+export * from './lib/post-process';
