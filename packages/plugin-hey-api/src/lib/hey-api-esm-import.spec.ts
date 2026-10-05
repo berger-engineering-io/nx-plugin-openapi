@@ -90,4 +90,64 @@ describe('HeyApiGenerator ESM import', () => {
       /Available: defineConfig/
     );
   });
+
+  it('should prefer generate over createClient', async () => {
+    const generate = jest.fn(async () => undefined);
+    const createClient = jest.fn(async () => undefined);
+    mockedDynamicImport.mockResolvedValue({ generate, createClient });
+
+    await generator.generate(options, ctx);
+
+    expect(generate).toHaveBeenCalled();
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it('should use createClient from a CJS default export', async () => {
+    const createClient = jest.fn(async () => undefined);
+    mockedDynamicImport.mockResolvedValue({ default: { createClient } });
+
+    await generator.generate(options, ctx);
+
+    expect(createClient).toHaveBeenCalledWith(
+      expect.objectContaining({ input: '/specs/api.yaml' })
+    );
+  });
+
+  it('should keep the original error when the import rejects with a non-Error', async () => {
+    mockedDynamicImport.mockRejectedValue('ERR_REQUIRE_ESM');
+
+    await expect(generator.generate(options, ctx)).rejects.toThrow(
+      /Original error: ERR_REQUIRE_ESM/
+    );
+  });
+
+  it.each([
+    ['a function', { default: jest.fn() }, 'Available: default'],
+    ['null', { default: null }, 'Available: default'],
+  ])(
+    'should reject a default export that is %s',
+    async (_label, namespace, message) => {
+      mockedDynamicImport.mockResolvedValue(namespace);
+
+      await expect(generator.generate(options, ctx)).rejects.toThrow(message);
+    }
+  );
+
+  it('should not list __esModule among available exports', async () => {
+    mockedDynamicImport.mockResolvedValue({
+      default: { __esModule: true, defineConfig: jest.fn() },
+    });
+
+    await expect(generator.generate(options, ctx)).rejects.toThrow(
+      /Available: defineConfig$/
+    );
+  });
+
+  it('should reject when generate is not a function', async () => {
+    mockedDynamicImport.mockResolvedValue({ generate: 'not-a-function' });
+
+    await expect(generator.generate(options, ctx)).rejects.toThrow(
+      /Expected 'generate' or 'createClient'. Available: generate/
+    );
+  });
 });
