@@ -11,6 +11,6 @@ export function addPrettierIgnoreEntry(args: {
     'gm'
   );
   if (entryRegex.test(content)) return;
-  content = `${content}\n${args.entry}\n`;
+  content = `${content.replace(/\n*$/, '\n')}${args.entry}\n`;
   args.tree.write('.prettierignore', content);
 }

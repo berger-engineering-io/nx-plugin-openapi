@@ -7,9 +7,63 @@ description: Get up and running with your first API client generation
 
 This guide will help you generate your first API client using the Nx Plugin OpenAPI.
 
+## Recommended: `add-client`
+
+The `add-client` generator sets up a client without `project.json` files. Nx infers the targets and libs from a client definition (see [Inferred Targets](/usage/inferred-targets/)).
+
+```bash
+nx g @nx-plugin-openapi/core:add-client petstore \
+  --directory=libs/shared/petstore \
+  --scope=shared \
+  --spec=https://petstore3.swagger.io/api/v3/openapi.json \
+  --adapter=openapi-tools
+```
+
+The generator:
+
+- downloads a remote `--spec` once to `libs/shared/petstore/petstore.openapi.json` (or `.yaml`) and stores the URL for `update-spec`. The file is written as downloaded and added to `.prettierignore`, so `update-spec --check` compares exact content. A local path is referenced as is.
+- writes `libs/shared/petstore/openapi-client.json`
+- registers `@nx-plugin-openapi/core/plugin` in `nx.json` if missing
+- with `--split` (default `true`): adds `tsconfig.base.json` paths for `@<npm-scope>/petstore-types`, `-api` and `-core` (change the prefix with `--importPrefix`) and a `README.md` per lib
+- adds the generated dirs to `.gitignore` (disable with `--addToGitignore=false`)
+- writes no `project.json`
+
+:::note
+The CLI option is `--adapter`, not `--generator`: `nx g` reserves `--generator`. In `openapi-client.json` the field is `generator`.
+:::
+
+| Option             | Default         | Description                                               |
+| ------------------ | --------------- | --------------------------------------------------------- |
+| `name`             |                 | Client name, e.g. `petstore`                              |
+| `directory`        |                 | Client directory                                          |
+| `scope`            |                 | Adds the tag `scope:<scope>`                              |
+| `spec`             |                 | Local spec path or URL                                    |
+| `adapter`          | `openapi-tools` | `openapi-tools` or `hey-api`                              |
+| `generatorOptions` |                 | Generator options, e.g. `--generatorOptions.client=fetch` |
+| `split`            | `true`          | Split into `types`, `api` and `core` libs                 |
+| `importPrefix`     | npm scope       | Prefix of the lib aliases                                 |
+
+Then generate and use the client:
+
+```bash
+nx show projects                    # petstore, petstore-types, petstore-api, petstore-core
+nx run petstore:generate            # cached, re-runs only when the spec or definition changes
+nx build petstore-api               # generates first
+nx run petstore:update-spec         # refresh the committed spec from the URL
+nx run petstore:update-spec --check # CI: fail if the remote spec changed
+```
+
+```ts
+import { PetService } from '@acme/petstore-api';
+import { Pet } from '@acme/petstore-types';
+```
+
+The rest of this guide shows the manual setup with an explicit `project.json` target.
+
 ## Step 1: Prepare Your OpenAPI Specification
 
 You'll need an OpenAPI specification file. This can be:
+
 - A local JSON or YAML file
 - A remote URL endpoint
 
@@ -129,11 +183,10 @@ You can also manually add the executor configuration to your `project.json` file
 ```
 
 :::tip[Generator Selection]
+
 - **`openapi-tools`**: Best for Angular projects needing injectable services, or when using OpenAPI Generator's extensive template ecosystem.
 - **`hey-api`**: Best for modern TypeScript projects wanting simpler, more type-safe generated code.
-:::
-
-
+  :::
 
 ## Step 3: Generate the API Client
 
@@ -196,11 +249,7 @@ For better integration with Nx's build system, configure target defaults in your
   "targetDefaults": {
     "generate-api": {
       "cache": true,
-      "inputs": [
-        "{projectRoot}/swagger.json",
-        "{projectRoot}/openapi.yaml",
-        "{projectRoot}/openapi-config.json"
-      ]
+      "inputs": ["{projectRoot}/swagger.json", "{projectRoot}/openapi.yaml", "{projectRoot}/openapi-config.json"]
     },
     "build": {
       "dependsOn": ["^build", "^generate-api", "generate-api"]
@@ -210,6 +259,7 @@ For better integration with Nx's build system, configure target defaults in your
 ```
 
 This configuration:
+
 - Enables caching for the `generate-api` executor
 - Makes builds depend on API generation
 - Includes relevant input files for cache invalidation

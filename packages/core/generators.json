@@ -1,6 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/nx-generators.json",
   "generators": {
+    "add-client": {
+      "factory": "./src/generators/add-client/generator",
+      "schema": "./src/generators/add-client/schema.json",
+      "description": "Add an OpenAPI client definition; targets and libs are inferred"
+    },
     "add-generate-api-target": {
       "factory": "./src/generators/add-generate-api-target/generator",
       "schema": "./src/generators/add-generate-api-target/schema.json",
