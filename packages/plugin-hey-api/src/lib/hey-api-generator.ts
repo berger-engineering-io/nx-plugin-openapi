@@ -6,6 +6,7 @@ import {
   GeneratorPlugin,
   GenerateOptionsBase,
 } from '@nx-plugin-openapi/core';
+import { dynamicImport } from './utils/dynamic-import';
 
 export interface HeyApiOptions {
   [key: string]: unknown;
@@ -62,9 +63,9 @@ export class HeyApiGenerator
   private async invokeOpenApiTs(
     config: { input: string; output: string } & Record<string, unknown>
   ): Promise<void> {
-    let mod: Record<string, unknown>;
+    let namespace: Record<string, unknown>;
     try {
-      mod = (await import('@hey-api/openapi-ts')) as Record<string, unknown>;
+      namespace = await dynamicImport('@hey-api/openapi-ts');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       throw new Error(
@@ -72,8 +73,19 @@ export class HeyApiGenerator
       );
     }
 
-    const generateExport = (mod as Record<string, unknown>)['generate'];
-    const createClientExport = (mod as Record<string, unknown>)['createClient'];
+    // ESM builds expose named exports; CJS builds loaded via import() may only
+    // expose `module.exports` under `default`.
+    const hasNamedApi =
+      typeof namespace['generate'] === 'function' ||
+      typeof namespace['createClient'] === 'function';
+    const defaultExport = namespace['default'];
+    const mod =
+      !hasNamedApi && typeof defaultExport === 'object' && defaultExport
+        ? (defaultExport as Record<string, unknown>)
+        : namespace;
+
+    const generateExport = mod['generate'];
+    const createClientExport = mod['createClient'];
 
     const fn =
       typeof generateExport === 'function'

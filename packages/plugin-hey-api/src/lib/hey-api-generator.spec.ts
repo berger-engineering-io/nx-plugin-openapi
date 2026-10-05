@@ -1,6 +1,13 @@
 import { HeyApiGenerator } from './hey-api-generator';
 import { GeneratorContext } from '@nx-plugin-openapi/core';
 
+// Native import() is unavailable in jest's vm; route it through jest's require.
+jest.mock('./utils/dynamic-import', () => ({
+  dynamicImport: (specifier: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Promise.resolve().then(() => require(specifier)),
+}));
+
 jest.mock(
   '@hey-api/openapi-ts',
   () => ({
