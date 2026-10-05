@@ -40,7 +40,7 @@ The plugin and its peer dependencies can be auto-installed. If you specify `"gen
 
 ## Configuration Options
 
-All [OpenAPI Generator CLI options](https://openapi-generator.tech/docs/usage/#generate) are supported. Pass them either directly in `options` or via the `generatorOptions` property.
+All [OpenAPI Generator CLI options](https://openapi-generator.tech/docs/usage/#generate) are supported. Pass them via the `generatorOptions` property (`generator`, `inputSpec` and `outputPath` stay top-level).
 
 ### Core Options
 
@@ -49,6 +49,7 @@ All [OpenAPI Generator CLI options](https://openapi-generator.tech/docs/usage/#g
 | `generator` | string | Must be `"openapi-tools"` |
 | `inputSpec` | string | Path to OpenAPI spec (local or URL) |
 | `outputPath` | string | Output directory for generated code |
+| `generatorName` | string | OpenAPI Generator to use (`-g`). Default: `typescript-angular` |
 | `configFile` | string | Path to OpenAPI Generator config file |
 | `skipValidateSpec` | boolean | Skip spec validation |
 
@@ -80,17 +81,48 @@ All [OpenAPI Generator CLI options](https://openapi-generator.tech/docs/usage/#g
 | `templateDirectory` | string | Custom templates directory |
 | `ignoreFileOverride` | string | Custom ignore file path |
 
+### Additional Properties and Mappings
+
+Generator-specific settings can be passed without a config file. Values may be `string`, `boolean` or `number`; each map is serialized to a single `k=v,k2=v2` CLI flag.
+
+| Option | Type | CLI flag |
+|--------|------|----------|
+| `additionalProperties` | `Record<string, string \| boolean \| number>` | `--additional-properties` |
+| `typeMappings` | `Record<string, string \| boolean \| number>` | `--type-mappings` |
+| `importMappings` | `Record<string, string \| boolean \| number>` | `--import-mappings` |
+| `schemaMappings` | `Record<string, string \| boolean \| number>` | `--schema-mappings` |
+| `nameMappings` | `Record<string, string \| boolean \| number>` | `--name-mappings` |
+
+```json
+{
+  "generatorOptions": {
+    "additionalProperties": {
+      "npmName": "@my-org/api-client",
+      "providedIn": "root",
+      "withInterfaces": true,
+      "useSingleRequestParameter": true
+    },
+    "typeMappings": {
+      "DateTime": "Date"
+    }
+  }
+}
+```
+
+:::note
+openapi-generator splits these flags on `,`, so keys and values must not contain commas. Use `configFile` for such values.
+:::
+
 ### Global Properties
+
+Global properties control which files are generated (`--global-property`):
 
 ```json
 {
   "globalProperties": {
-    "supportsES6": "true",
-    "npmName": "@my-org/api-client",
-    "npmVersion": "1.0.0",
-    "providedInRoot": "true",
-    "withInterfaces": "true",
-    "useSingleRequestParameter": "true"
+    "models": "",
+    "apis": "",
+    "supportingFiles": "false"
   }
 }
 ```
@@ -107,11 +139,13 @@ For Angular projects, use these recommended settings:
       "generator": "openapi-tools",
       "inputSpec": "apps/my-app/swagger.json",
       "outputPath": "libs/api-client/src",
-      "globalProperties": {
-        "supportsES6": "true",
-        "providedInRoot": "true",
-        "withInterfaces": "true",
-        "useSingleRequestParameter": "true"
+      "generatorOptions": {
+        "additionalProperties": {
+          "supportsES6": true,
+          "providedIn": "root",
+          "withInterfaces": true,
+          "useSingleRequestParameter": true
+        }
       }
     }
   }
@@ -142,7 +176,9 @@ Or use a separate config file:
       "generator": "openapi-tools",
       "inputSpec": "apps/my-app/swagger.json",
       "outputPath": "libs/api-client/src",
-      "configFile": "apps/my-app/openapi-config.json"
+      "generatorOptions": {
+        "configFile": "apps/my-app/openapi-config.json"
+      }
     }
   }
 }
@@ -160,6 +196,17 @@ OpenAPI Generator supports 50+ generators. Common ones include:
 - `kotlin`
 - `python`
 
+Select one via `generatorName`:
+
+```json
+{
+  "generator": "openapi-tools",
+  "generatorOptions": {
+    "generatorName": "typescript-fetch"
+  }
+}
+```
+
 See the [OpenAPI Generator documentation](https://openapi-generator.tech/docs/generators/) for the full list.
 
 ## Troubleshooting
@@ -172,13 +219,23 @@ OpenAPI Generator requires Java 8+. Ensure Java is installed and available in yo
 java -version
 ```
 
+### CLI Not Found
+
+The plugin resolves `@openapitools/openapi-generator-cli/main.js` from the workspace root via Node module resolution (works with npm, yarn and pnpm). If it cannot be resolved, install it in the workspace:
+
+```bash
+npm install --save-dev @openapitools/openapi-generator-cli
+```
+
 ### Spec Validation Errors
 
 If you're confident your spec is valid, you can skip validation:
 
 ```json
 {
-  "skipValidateSpec": true
+  "generatorOptions": {
+    "skipValidateSpec": true
+  }
 }
 ```
 

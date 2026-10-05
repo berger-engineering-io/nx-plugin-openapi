@@ -5,7 +5,11 @@ import {
   buildCommandArgs,
   OpenApiGeneratorOptions,
 } from './utils/build-command';
+import { resolveOpenApiGeneratorCli } from './utils/resolve-cli';
 import { GenerateOptionsBase, GeneratorContext } from '@nx-plugin-openapi/core';
+
+const RESOLVED_CLI_PATH =
+  '/workspace/node_modules/@openapitools/openapi-generator-cli/main.js';
 
 // Mock node:child_process
 jest.mock('node:child_process', () => ({
@@ -16,6 +20,11 @@ jest.mock('node:child_process', () => ({
 // Mock build-command utility
 jest.mock('./utils/build-command', () => ({
   buildCommandArgs: jest.fn(),
+}));
+
+// Mock CLI resolution
+jest.mock('./utils/resolve-cli', () => ({
+  resolveOpenApiGeneratorCli: jest.fn(),
 }));
 
 type MockChildProcess = EventEmitter & { on: jest.Mock };
@@ -48,6 +57,10 @@ describe('OpenApiToolsGenerator', () => {
     mockChildProcess = new EventEmitter() as MockChildProcess;
     mockChildProcess.on = jest.fn(mockChildProcess.on.bind(mockChildProcess));
     (spawn as jest.Mock).mockReturnValue(mockChildProcess);
+
+    (resolveOpenApiGeneratorCli as jest.Mock).mockReturnValue(
+      RESOLVED_CLI_PATH
+    );
 
     // Mock buildCommandArgs to return test args
     (buildCommandArgs as jest.Mock).mockImplementation((options) => [
@@ -101,7 +114,7 @@ describe('OpenApiToolsGenerator', () => {
         expect(spawn).toHaveBeenCalledWith(
           'node',
           [
-            'node_modules/@openapitools/openapi-generator-cli/main.js',
+            RESOLVED_CLI_PATH,
             'generate',
             '-i',
             'api.yaml',
@@ -336,11 +349,37 @@ describe('OpenApiToolsGenerator', () => {
 
         expect(spawn).toHaveBeenCalledWith(
           'node',
-          expect.arrayContaining([
-            'node_modules/@openapitools/openapi-generator-cli/main.js',
-          ]),
+          expect.arrayContaining([RESOLVED_CLI_PATH]),
           expect.any(Object)
         );
+      });
+
+      it('should resolve the CLI from the workspace root', async () => {
+        const options = {
+          inputSpec: 'api.yaml',
+          outputPath: 'output',
+        };
+
+        const generatePromise = generator.generate(options, mockContext);
+        process.nextTick(() => mockChildProcess.emit('close', 0));
+
+        await generatePromise;
+
+        expect(resolveOpenApiGeneratorCli).toHaveBeenCalledWith('/workspace');
+      });
+
+      it('should not spawn when the CLI cannot be resolved', async () => {
+        (resolveOpenApiGeneratorCli as jest.Mock).mockImplementation(() => {
+          throw new Error('Could not resolve CLI');
+        });
+
+        await expect(
+          generator.generate(
+            { inputSpec: 'api.yaml', outputPath: 'output' },
+            mockContext
+          )
+        ).rejects.toThrow('Failed to generate code after 1 attempts');
+        expect(spawn).not.toHaveBeenCalled();
       });
 
       it('should use workspace root as cwd', async () => {

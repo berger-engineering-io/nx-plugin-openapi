@@ -1,4 +1,8 @@
-import { buildCommandArgs, OpenApiGeneratorOptions } from './build-command';
+import {
+  buildCommandArgs,
+  OpenApiGeneratorOptions,
+  serializeKeyValueOption,
+} from './build-command';
 
 describe('buildCommandArgs', () => {
   describe('basic arguments', () => {
@@ -21,7 +25,7 @@ describe('buildCommandArgs', () => {
       ]);
     });
 
-    it('should always use typescript-angular as generator', () => {
+    it('should default to typescript-angular as generator', () => {
       const options: OpenApiGeneratorOptions = {
         inputSpec: 'spec.json',
         outputPath: 'output',
@@ -32,6 +36,29 @@ describe('buildCommandArgs', () => {
       expect(result).toContain('-g');
       const gIndex = result.indexOf('-g');
       expect(result[gIndex + 1]).toBe('typescript-angular');
+    });
+  });
+
+  describe('generatorName', () => {
+    it('should use the configured generator name', () => {
+      const result = buildCommandArgs({
+        inputSpec: 'api.yaml',
+        outputPath: 'output',
+        generatorName: 'typescript-fetch',
+      });
+
+      expect(result[result.indexOf('-g') + 1]).toBe('typescript-fetch');
+      expect(result).not.toContain('typescript-angular');
+    });
+
+    it('should fall back to typescript-angular for empty generator name', () => {
+      const result = buildCommandArgs({
+        inputSpec: 'api.yaml',
+        outputPath: 'output',
+        generatorName: '',
+      });
+
+      expect(result[result.indexOf('-g') + 1]).toBe('typescript-angular');
     });
   });
 
@@ -196,6 +223,80 @@ describe('buildCommandArgs', () => {
       const result = buildCommandArgs(options);
 
       expect(result).not.toContain('--global-property');
+    });
+  });
+
+  describe('serializeKeyValueOption', () => {
+    it('should serialize string, boolean and number values', () => {
+      expect(
+        serializeKeyValueOption({
+          npmName: '@my-org/api',
+          withInterfaces: true,
+          supportsES6: false,
+          ngVersion: 17,
+        })
+      ).toBe('npmName=@my-org/api,withInterfaces=true,supportsES6=false,ngVersion=17');
+    });
+
+    it('should return empty string for empty map', () => {
+      expect(serializeKeyValueOption({})).toBe('');
+    });
+
+    it('should skip null and undefined values', () => {
+      expect(
+        serializeKeyValueOption({
+          a: 'x',
+          b: undefined as unknown as string,
+          c: null as unknown as string,
+        })
+      ).toBe('a=x');
+    });
+  });
+
+  describe('key/value flags', () => {
+    it('should add additional properties as single flag', () => {
+      const result = buildCommandArgs({
+        inputSpec: 'api.yaml',
+        outputPath: 'output',
+        additionalProperties: { providedIn: 'root', withInterfaces: true },
+      });
+
+      expect(result).toContain(
+        '--additional-properties=providedIn=root,withInterfaces=true'
+      );
+    });
+
+    it('should add all mapping flags', () => {
+      const result = buildCommandArgs({
+        inputSpec: 'api.yaml',
+        outputPath: 'output',
+        typeMappings: { DateTime: 'Date', date: 'string' },
+        importMappings: { Date: 'date-fns' },
+        schemaMappings: { Pet: 'my.Pet' },
+        nameMappings: { _type: 'type' },
+      });
+
+      expect(result).toContain('--type-mappings=DateTime=Date,date=string');
+      expect(result).toContain('--import-mappings=Date=date-fns');
+      expect(result).toContain('--schema-mappings=Pet=my.Pet');
+      expect(result).toContain('--name-mappings=_type=type');
+    });
+
+    it('should skip empty or undefined maps', () => {
+      const result = buildCommandArgs({
+        inputSpec: 'api.yaml',
+        outputPath: 'output',
+        additionalProperties: {},
+        typeMappings: undefined,
+      });
+
+      expect(
+        result.some(
+          (arg) =>
+            arg.startsWith('--additional-properties') ||
+            arg.startsWith('--type-mappings')
+        )
+      ).toBe(false);
     });
   });
 
