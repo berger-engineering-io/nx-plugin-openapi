@@ -11,8 +11,8 @@ This guide will walk you through installing the Nx Plugin OpenAPI in your Nx wor
 
 Before installing the plugin, make sure you have:
 
-- An existing Nx workspace (version 19+)
-- Node.js and npm installed
+- An existing Nx workspace (version 19 to 23)
+- Node.js and npm installed (Node.js 22.18+ for `@hey-api/openapi-ts` 0.9x)
 
 ## Core Package Installation
 
@@ -58,8 +58,8 @@ Generator plugins and their peer dependencies are auto-installed when first used
 | Package | Purpose | Peer Dependencies |
 |---------|---------|-------------------|
 | `@nx-plugin-openapi/core` | Core executor and plugin system | `@nx/devkit` |
-| `@nx-plugin-openapi/plugin-openapi` | OpenAPI Generator plugin | `@openapitools/openapi-generator-cli` |
-| `@nx-plugin-openapi/plugin-hey-api` | hey-api plugin | `@hey-api/openapi-ts` |
+| `@nx-plugin-openapi/plugin-openapi` | OpenAPI Generator plugin | `@nx/devkit`, `@openapitools/openapi-generator-cli` |
+| `@nx-plugin-openapi/plugin-hey-api` | hey-api plugin | `@nx/devkit`, `@hey-api/openapi-ts` (`>=0.83.1 <1.0.0`) |
 
 ## Legacy Package Installation
 
