@@ -40,6 +40,7 @@ export default defineConfig({
             { label: 'Configuration', slug: 'usage/configuration' },
             { label: 'Examples', slug: 'usage/examples' },
             { label: 'Nx Integration', slug: 'usage/nx-integration' },
+            { label: 'Inferred Targets', slug: 'usage/inferred-targets' },
           ],
         },
         {
