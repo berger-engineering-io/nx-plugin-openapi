@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'nx-plugin-openapi',
   preset: '../../jest.preset.js',
   transform: {

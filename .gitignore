@@ -52,3 +52,6 @@ apps/demo/src/appapps/demo/src/app/api-services/
 /apps/demo/src/app/api/
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+.nx/polygraph
+.nx/self-healing
