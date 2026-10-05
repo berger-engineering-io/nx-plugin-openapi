@@ -33,11 +33,13 @@ export class HeyApiGenerator
 
     if (typeof inputSpec === 'string') {
       this.cleanOutput(ctx, outputPath);
-      await this.invokeOpenApiTs({
-        input: this.resolveInputSpecPath(ctx, inputSpec),
-        output: this.resolveOutputPath(ctx, outputPath),
-        ...generatorOptions,
-      });
+      await this.invokeOpenApiTs(
+        this.buildConfig(
+          this.resolveInputSpecPath(ctx, inputSpec),
+          this.resolveOutputPath(ctx, outputPath),
+          generatorOptions
+        )
+      );
     } else {
       const entries = Object.entries(inputSpec as Record<string, string>) as [
         string,
@@ -50,19 +52,42 @@ export class HeyApiGenerator
         logger.info(`Generating service: ${serviceName}`);
         const serviceOutputPath = join(outputPath, serviceName);
         this.cleanOutput(ctx, serviceOutputPath);
-        await this.invokeOpenApiTs({
-          input: this.resolveInputSpecPath(ctx, specPath),
-          output: this.resolveOutputPath(ctx, serviceOutputPath),
-          ...generatorOptions,
-        });
+        await this.invokeOpenApiTs(
+          this.buildConfig(
+            this.resolveInputSpecPath(ctx, specPath),
+            this.resolveOutputPath(ctx, serviceOutputPath),
+            generatorOptions
+          )
+        );
       }
     }
 
     logger.info(`hey-api code generation completed successfully`);
   }
 
+  /**
+   * Resolved input/output always win over generatorOptions, otherwise the
+   * cleaned dir and the dir hey-api writes to could diverge. An object
+   * `output` (format, lint, ...) is kept with its `path` forced.
+   */
+  private buildConfig(
+    input: string,
+    outputPath: string,
+    generatorOptions: Partial<HeyApiOptions>
+  ): Record<string, unknown> {
+    const { input: userInput, output: userOutput, ...rest } = generatorOptions;
+
+    if (userInput !== undefined) {
+      logger.warn(
+        `hey-api: ignoring generatorOptions.input; use inputSpec instead`
+      );
+    }
+
+    return { ...rest, input, output: mergeOutput(outputPath, userOutput) };
+  }
+
   private async invokeOpenApiTs(
-    config: { input: string; output: string } & Record<string, unknown>
+    config: Record<string, unknown>
   ): Promise<void> {
     let namespace: Record<string, unknown>;
     try {
@@ -112,6 +137,26 @@ export class HeyApiGenerator
   classify(outDir: string) {
     return classifyHeyApiOutput(outDir);
   }
+}
+
+function mergeOutput(
+  outputPath: string,
+  userOutput: unknown
+): string | Record<string, unknown> {
+  if (userOutput === undefined) {
+    return outputPath;
+  }
+  if (isPlainObject(userOutput)) {
+    return { ...userOutput, path: outputPath };
+  }
+  logger.warn(
+    `hey-api: ignoring non-object generatorOptions.output; use outputPath instead`
+  );
+  return outputPath;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export default new HeyApiGenerator();
