@@ -16,8 +16,8 @@ describe('PostProcessorRegistry', () => {
     );
   });
 
-  it('has no built-ins yet', () => {
-    expect(PostProcessorRegistry.instance().list()).toEqual([]);
+  it('registers built-ins', () => {
+    expect(PostProcessorRegistry.instance().list()).toEqual(['split']);
   });
 
   it('registers and resolves post-processors', () => {
@@ -27,7 +27,7 @@ describe('PostProcessorRegistry', () => {
 
     expect(registry.has('noop')).toBe(true);
     expect(registry.get('noop')).toBe(postProcessor);
-    expect(registry.list()).toEqual(['noop']);
+    expect(registry.list()).toEqual(['split', 'noop']);
   });
 
   it('throws for unknown post-processors', () => {

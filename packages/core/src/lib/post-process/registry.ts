@@ -1,11 +1,13 @@
 import { PostProcessor } from '../interfaces';
 import { PostProcessorNotFoundError } from './errors';
+import { splitPostProcessor } from './split';
 
 /**
  * Post-processors shipped with core, registered on first registry access.
- * Empty for now; add built-ins here.
  */
-const BUILTIN_POST_PROCESSORS: PostProcessor[] = [];
+const BUILTIN_POST_PROCESSORS: PostProcessor[] = [
+  splitPostProcessor as PostProcessor,
+];
 
 export class PostProcessorRegistry {
   private static _instance: PostProcessorRegistry | null = null;

@@ -34,7 +34,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Registered post-processor name or package name"
+            "description": "Registered post-processor name (built-in: split) or package name"
           },
           "options": {
             "type": "object",
