@@ -1,6 +1,10 @@
 import { ExecutorContext, logger, PromiseExecutor } from '@nx/devkit';
 import { GeneratorRegistry } from '../../lib/registry';
 import { loadPlugin } from '../../lib/plugin-loader';
+import {
+  createPostProcessContext,
+  runPostProcessors,
+} from '../../lib/post-process/run';
 import { CoreGenerateApiExecutorSchema } from './schema';
 
 const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
@@ -12,6 +16,7 @@ const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
     inputSpec,
     outputPath,
     generatorOptions,
+    postProcess,
   } = options;
   try {
     // Ensure plugin is available (load + register if needed)
@@ -32,7 +37,7 @@ const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
     }
 
     // Execute
-    await plugin.generate(
+    const result = await plugin.generate(
       { inputSpec, outputPath, generatorOptions } as never,
       {
         root: context.root,
@@ -41,6 +46,22 @@ const runExecutor: PromiseExecutor<CoreGenerateApiExecutorSchema> = async (
     );
 
     logger.info(`Finished generating API using '${generator}'`);
+
+    const generationSucceeded = !result || result.success;
+    if (postProcess?.length && generationSucceeded) {
+      await runPostProcessors(
+        postProcess,
+        createPostProcessContext({
+          root: context.root,
+          projectName: context.projectName,
+          outputPath,
+          inputSpec,
+          generatorName: generator,
+          generator: plugin,
+          generatorOptions,
+        })
+      );
+    }
     return { success: true };
   } catch (e) {
     logger.error(`API generation failed using '${generator}'`);

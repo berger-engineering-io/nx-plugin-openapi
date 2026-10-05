@@ -167,6 +167,32 @@ This object allows you to pass options specific to the selected generator. The a
 }
 ```
 
+### `postProcess`
+
+- **Type:** `Array<{ name: string; options?: object }>`
+- **Default:** `[]`
+- **Required:** No
+- **Description:** Post-processors run in order after a successful generation
+
+Each entry is resolved by `name`:
+
+1. Post-processors registered in the `PostProcessorRegistry` (built-ins or registered programmatically)
+2. Otherwise `name` is imported as a package. It must export a post-processor as `default`, `postProcessor`, or via a `createPostProcessor()` factory.
+
+`options` is passed as-is to the post-processor. Steps run sequentially; the first failing step fails the executor and skips the remaining steps. Post-processors are skipped if the generator reports `success: false`.
+
+**Example:**
+```json
+{
+  "postProcess": [
+    { "name": "@my-org/openapi-post-process-lint", "options": { "fix": true } },
+    { "name": "@my-org/openapi-post-process-banner" }
+  ]
+}
+```
+
+See [Creating Plugins](/guides/creating-plugins/#post-processing) for how to write a post-processor.
+
 ---
 
 ## OpenAPI Generator Options
