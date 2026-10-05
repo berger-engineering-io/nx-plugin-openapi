@@ -2,11 +2,10 @@
   "name": "@nx-plugin-openapi/core",
   "version": "1.0.0",
   "dependencies": {
-    "@nx/devkit": "19.8.14",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@nx/devkit": ">19.0.0"
+    "@nx/devkit": ">=19.0.0 <24.0.0"
   },
   "type": "commonjs",
   "main": "./src/index.js",
