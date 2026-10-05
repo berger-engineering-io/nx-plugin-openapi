@@ -55,3 +55,4 @@ apps/demo/src/appapps/demo/src/app/api-services/
 
 .nx/polygraph
 .nx/self-healing
+.nx/migrate-runs

@@ -9,6 +9,7 @@ import { GenerateOptionsBase, GeneratorContext } from '@nx-plugin-openapi/core';
 
 // Mock node:child_process
 jest.mock('node:child_process', () => ({
+  ...jest.requireActual('node:child_process'),
   spawn: jest.fn(),
 }));
 
