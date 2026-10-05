@@ -53,7 +53,8 @@ export function createModuleExportsResolver(
     types: [],
     noEmit: true,
     target: ts.ScriptTarget.ES2020,
-    moduleResolution: ts.ModuleResolutionKind.Node10,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
   };
   const virtualFiles = new Map(
     files
