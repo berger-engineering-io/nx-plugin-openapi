@@ -193,6 +193,72 @@ Each entry is resolved by `name`:
 
 See [Creating Plugins](/guides/creating-plugins/#post-processing) for how to write a post-processor.
 
+#### Built-in: `split`
+
+Splits the generated client into three libs so Nx module boundaries can be enforced on generated code: services get `type:api`, models get `type:types`.
+
+| Lib     | Content                                          | May import      |
+| ------- | ------------------------------------------------ | --------------- |
+| `types` | models / DTOs (`model` files)                    | nothing         |
+| `core`  | runtime: configuration, http client, utils       | `types`         |
+| `api`   | services / SDK functions                         | `types`, `core` |
+
+The generator plugin classifies its files via `classify()` (supported by `openapi-tools` and `hey-api`). Then `split`:
+
+1. moves `model`, `api` and `core` files to `<targetRoot>/{types,api,core}/src/`, keeping their relative layout,
+2. rewrites relative imports into another lib to that lib's alias (`import`, `import type`, `export ... from`, dynamic `import()`, `import('x').T`; `index` and `.js` extensions are resolved),
+3. writes a `src/index.ts` barrel per lib,
+4. deletes the generator's root `index.ts` barrel. Files classified `other` (README, metadata, ...) stay in place.
+
+**Options:**
+
+| Option       | Type                                                | Default      | Description                                                                 |
+| ------------ | --------------------------------------------------- | ------------ | --------------------------------------------------------------------------- |
+| `aliases`    | `{ types: string; api: string; core: string }`      | – (required) | Import path alias per lib, e.g. `@acme/petstore-types`                       |
+| `targetRoot` | `string`                                            | `outputPath` | Directory (relative to the workspace root) receiving the `types`, `api` and `core` libs |
+
+**Example:**
+```json
+{
+  "generator": "openapi-tools",
+  "inputSpec": "libs/petstore/petstore.json",
+  "outputPath": "libs/petstore/generated",
+  "postProcess": [
+    {
+      "name": "split",
+      "options": {
+        "aliases": {
+          "types": "@acme/petstore-types",
+          "api": "@acme/petstore-api",
+          "core": "@acme/petstore-core"
+        }
+      }
+    }
+  ]
+}
+```
+
+Result (layout contract for tooling):
+
+```
+libs/petstore/generated/
+├── types/src/index.ts   # barrel, + model files (e.g. model/pet.ts)
+├── api/src/index.ts     # barrel, + service files (e.g. api/pet.service.ts)
+├── core/src/index.ts    # barrel, + runtime files (e.g. configuration.ts)
+└── README.md, ...       # files classified 'other'
+```
+
+`split` only owns `<lib>/src/**`: each run replaces it completely. It does **not** create `project.json` files or tsconfig path entries. The aliases must resolve to `<targetRoot>/<lib>/src/index.ts` (e.g. via `tsconfig.base.json` `paths`); the libs are meant to be set up by the `add-client` generator and inferred as Nx projects by a `createNodes` plugin.
+
+**Notes:**
+
+- **`targetRoot` default:** the output path itself, so the libs are regenerated together with the client and never collide with sibling directories. Since the generator cleans `outputPath` before generating, use a `targetRoot` outside of it (e.g. `libs/petstore`) if you need to keep files next to `src/` in the lib directories.
+- **Boundaries:** if the classification produces a forbidden import (e.g. a model importing `core`), or an import cannot be resolved or points to a file classified `other`, `split` fails before writing anything and lists the offending imports.
+- **Barrels:** re-export top-level files, entry files not imported by other files of the lib (e.g. `model/models.ts`) and files imported from other libs. If two modules export different bindings with the same name, the first one wins and the later module is re-exported by name without the clashing names.
+- **Multiple specs (`inputSpec` object):** each service is split separately into `<targetRoot>/<service>/{types,api,core}`. Every alias must contain the `{service}` placeholder, e.g. `@acme/{service}-types`.
+- **`classify()` options:** plugins receive the `split` options plus `generatorOptions` and, for multiple specs, `service`. `openapi-tools` classifies the `typescript-*` layouts (tuned for `typescript-angular`: `model/` → types, `api/` → api, other top-level files → core; honours `apiPackage`/`modelPackage`); unknown files are treated as `other` with a warning.
+- Requires `typescript` in the workspace (optional peer dependency of `@nx-plugin-openapi/core`).
+
 ---
 
 ## OpenAPI Generator Options

@@ -8,6 +8,7 @@ import {
   ExecutionError,
 } from '@nx-plugin-openapi/core';
 import { logger } from '@nx/devkit';
+import { classifyOpenApiToolsOutput } from './classify';
 import {
   buildCommandArgs,
   OpenApiGeneratorOptions,
@@ -162,6 +163,10 @@ export class OpenApiToolsGenerator
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  classify(outDir: string, options?: Record<string, unknown>) {
+    return classifyOpenApiToolsOutput(outDir, options);
   }
 }
 

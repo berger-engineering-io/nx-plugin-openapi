@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { logger } from '@nx/devkit';
+import { classifyHeyApiOutput } from './classify';
 import {
   BaseGenerator,
   GeneratorContext,
@@ -106,6 +107,10 @@ export class HeyApiGenerator
     }
 
     await fn(config as Record<string, unknown>);
+  }
+
+  classify(outDir: string) {
+    return classifyHeyApiOutput(outDir);
   }
 }
 

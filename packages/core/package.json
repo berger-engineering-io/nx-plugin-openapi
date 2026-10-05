@@ -5,7 +5,13 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@nx/devkit": ">=19.0.0 <24.0.0"
+    "@nx/devkit": ">=19.0.0 <24.0.0",
+    "typescript": ">=4.8.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "type": "commonjs",
   "main": "./src/index.js",
