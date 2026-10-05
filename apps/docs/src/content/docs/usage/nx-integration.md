@@ -81,9 +81,19 @@ Configure default behavior for all `generate-api` targets in your workspace:
 
 ## Caching Configuration
 
+### Spec Content Is Part of the Hash
+
+The `generate-api` executor ships a custom hasher. On top of the regular Nx task hash (which already covers all options, incl. `generator` and `generatorOptions`), it adds a SHA-256 of the content of every `inputSpec`:
+
+- **Local files**: resolved against the workspace root (absolute paths allowed). Editing the spec invalidates the cache, even if it is not listed in `inputs`.
+- **Remote URLs** (`http`/`https`): the spec is fetched and its content hashed, so a changed remote spec triggers regeneration.
+- **Multiple specs** (record `inputSpec`): every entry is hashed.
+
+If a remote spec cannot be fetched (non-OK response), hashing fails with a clear error instead of silently reusing stale output.
+
 ### Input Files for Cache Invalidation
 
-Specify which files should trigger cache invalidation:
+Specify additional files (configs, templates) that should trigger cache invalidation:
 
 ```json title="nx.json"
 {
@@ -106,7 +116,7 @@ Specify which files should trigger cache invalidation:
 
 ### Remote URL Caching
 
-For remote OpenAPI specifications, the executor automatically handles caching based on content:
+For remote OpenAPI specifications, the executor's hasher automatically handles caching based on content:
 
 ```json title="project.json"
 {
@@ -126,6 +136,7 @@ The cache key includes the remote URL content, so:
 - ✅ Same content = cache hit
 - ✅ Changed content = cache miss and regeneration
 - ⚠️ Remote fetch happens on every run to check for changes
+- ⚠️ Unreachable spec URL = task fails during hashing
 
 ### Output Configuration
 
