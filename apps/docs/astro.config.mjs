@@ -46,6 +46,7 @@ export default defineConfig({
           label: 'API Reference',
           items: [
             { label: 'generate-api executor', slug: 'reference/generate-api' },
+            { label: 'update-spec executor', slug: 'reference/update-spec' },
           ],
         },
         {
