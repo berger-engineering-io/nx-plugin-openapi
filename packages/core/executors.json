@@ -4,6 +4,7 @@
     "generate-api": {
       "implementation": "./src/executors/generate-api/executor",
       "schema": "./src/executors/generate-api/schema.json",
+      "hasher": "./src/executors/generate-api/hasher",
       "description": "Generate API code using a selected generator plugin"
     }
   }
