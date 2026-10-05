@@ -12,6 +12,7 @@ import {
   buildCommandArgs,
   OpenApiGeneratorOptions,
 } from './utils/build-command';
+import { resolveOpenApiGeneratorCli } from './utils/resolve-cli';
 
 interface RetryOptions {
   maxAttempts?: number;
@@ -119,9 +120,10 @@ export class OpenApiToolsGenerator
     args: string[],
     ctx: GeneratorContext
   ): Promise<void> {
+    const cliPath = resolveOpenApiGeneratorCli(ctx.root);
     return new Promise<void>((resolve, reject) => {
       const command = 'node';
-      const fullArgs = ['node_modules/@openapitools/openapi-generator-cli/main.js', ...args];
+      const fullArgs = [cliPath, ...args];
       
       logger.debug(`Executing: ${command} ${fullArgs.join(' ')}`);
       
