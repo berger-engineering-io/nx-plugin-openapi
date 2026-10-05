@@ -1,5 +1,6 @@
 import { logger } from '@nx/devkit';
 import { PostProcessor } from '../interfaces';
+import { dynamicImport } from '../utils/dynamic-import';
 import { PostProcessorLoadError, PostProcessorNotFoundError } from './errors';
 import { PostProcessorRegistry } from './registry';
 
@@ -43,11 +44,28 @@ export function extractPostProcessor(
   return undefined;
 }
 
+/**
+ * Like `extractPostProcessor`, but also looks inside `default`: a native
+ * import() of a CJS module exposes `module.exports` as `default`, so e.g.
+ * `exports.default = postProcessor` ends up at `mod.default.default`.
+ */
+function extractPostProcessorWithInterop(
+  mod: PostProcessorModule
+): PostProcessor | undefined {
+  const cjsExports = mod.default;
+  return (
+    extractPostProcessor(mod) ??
+    (cjsExports && typeof cjsExports === 'object'
+      ? extractPostProcessor(cjsExports as PostProcessorModule)
+      : undefined)
+  );
+}
+
 async function importPostProcessorModule(
   name: string
 ): Promise<PostProcessorModule> {
   try {
-    return await import(name);
+    return await dynamicImport<PostProcessorModule>(name);
   } catch (e) {
     logger.debug(`Failed to import post-processor ${name}: ${e}`);
     if (isModuleNotFound(e)) throw new PostProcessorNotFoundError(name);
@@ -66,7 +84,7 @@ export async function loadPostProcessor(name: string): Promise<PostProcessor> {
 
   logger.debug(`Loading post-processor from package: ${name}`);
   const mod = await importPostProcessorModule(name);
-  const postProcessor = extractPostProcessor(mod);
+  const postProcessor = extractPostProcessorWithInterop(mod);
   if (!postProcessor) {
     const availableExports = Object.keys(mod).filter((k) => k !== '__esModule');
     throw new PostProcessorLoadError(

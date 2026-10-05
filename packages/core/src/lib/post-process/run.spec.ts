@@ -1,3 +1,11 @@
+// Native import() is unavailable in jest's vm; route it through jest's require.
+jest.mock('../utils/dynamic-import', () => ({
+  dynamicImport: jest.fn((specifier: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Promise.resolve().then(() => require(specifier))
+  ),
+}));
+
 import { createPostProcessContext, runPostProcessors } from './run';
 import { PostProcessorRegistry } from './registry';
 import { PostProcessError, PostProcessorNotFoundError } from './errors';
