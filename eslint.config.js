@@ -43,4 +43,10 @@ module.exports = [
       '@typescript-eslint/no-unsafe-function-type': 'off',
     },
   },
+  {
+    files: ['**/*.ts'],
+    rules: {
+      '@angular-eslint/prefer-standalone': 'off',
+    },
+  },
 ];
